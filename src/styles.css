@@ -1,0 +1,339 @@
+:root {
+  /* Palette */
+  --ink: #12242B;          /* near-black teal, primary text/dark surfaces */
+  --teal-900: #0F3A3E;
+  --teal-700: #1D5C5F;
+  --teal-500: #2E8A82;     /* primary action color */
+  --paper: #F7F5F0;        /* warm off-white background */
+  --paper-raised: #FFFFFF;
+  --line: #DDE3DF;
+  --amber: #D98E3E;        /* alerts / attention accent */
+  --red: #B5473C;          /* critical / cancel */
+  --muted: #6B7A78;
+
+  /* Type */
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  --radius: 6px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.mono { font-family: var(--font-mono); letter-spacing: 0.02em; }
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+a { color: var(--teal-700); }
+
+/* ---------- App shell ---------- */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background: var(--ink);
+  color: #EDEFEC;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  flex-shrink: 0;
+}
+
+.sidebar .brand {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  padding: 0 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.sidebar .brand .dot { color: var(--amber); }
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 20px;
+  color: #B9C4C1;
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: all 0.15s ease;
+}
+.nav-link:hover { color: #fff; background: rgba(255,255,255,0.04); }
+.nav-link.active {
+  color: #fff;
+  border-left-color: var(--amber);
+  background: rgba(255,255,255,0.06);
+}
+
+.nav-role {
+  margin-top: auto;
+  padding: 16px 20px 4px;
+  font-size: 0.78rem;
+  color: #7C8B88;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.main {
+  flex: 1;
+  padding: 32px 40px;
+  max-width: 1200px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}
+.page-header .eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.page-header h1 { font-size: 1.6rem; }
+
+/* ---------- Cards / tables ---------- */
+.card {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+.stat-card .value {
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--teal-900);
+}
+.stat-card .label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th {
+  text-align: left;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+td { padding: 12px; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #FBFAF7; }
+
+.badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 100px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+.badge.ok { background: #E4F0DD; color: #3E7233; }
+.badge.wait { background: #FBEBD6; color: var(--amber); }
+.badge.busy { background: #FBE4E1; color: var(--red); }
+.badge.neutral { background: #E7ECEB; color: var(--muted); }
+
+/* ---------- Forms ---------- */
+input, select, textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  background: var(--paper-raised);
+}
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--teal-500);
+  outline-offset: 1px;
+}
+label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--teal-900);
+  margin-bottom: 5px;
+}
+.field { margin-bottom: 14px; }
+.form-row { display: flex; gap: 14px; }
+.form-row > * { flex: 1; }
+
+.btn {
+  display: inline-block;
+  padding: 9px 18px;
+  border-radius: var(--radius);
+  border: none;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+.btn-primary { background: var(--teal-900); color: #fff; }
+.btn-primary:hover { background: var(--ink); }
+.btn-ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+.btn-ghost:hover { border-color: var(--teal-500); }
+.btn-sm { padding: 5px 12px; font-size: 0.78rem; }
+
+.error-banner {
+  background: #FBE4E1;
+  color: var(--red);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 0.86rem;
+  margin-bottom: 16px;
+}
+
+.notice-banner {
+  background: #FBF3E3;
+  color: var(--amber);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 0.86rem;
+  margin-bottom: 16px;
+}
+
+/* ---------- Print-friendly pages ---------- */
+/* Used by /print/invoice/:id and /print/prescription/:id. These pages
+   render outside the app Shell (no sidebar) so window.print() / a browser's
+   "Print to PDF" produces a clean document, not a screenshot of the UI. */
+.print-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px;
+  background: #fff;
+  font-family: var(--font-body);
+  color: var(--ink);
+}
+.print-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+.print-brand { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; }
+.print-meta { text-align: right; font-size: 0.82rem; color: var(--muted); }
+.print-section { margin-bottom: 20px; }
+.print-section h3 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.print-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.print-table th, .print-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+.print-total-row td { font-weight: 700; border-top: 2px solid var(--ink); border-bottom: none; }
+.print-actions { margin-bottom: 24px; }
+
+@media print {
+  .print-actions { display: none; }
+  body { background: #fff; }
+  .print-page { padding: 0; max-width: none; }
+}
+
+/* ---------- Ward bed map (signature element) ---------- */
+.ward-map { display: flex; flex-direction: column; gap: 18px; }
+.ward-block { }
+.ward-block h3 {
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+  color: var(--teal-900);
+}
+.bed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 8px;
+}
+.bed-tile {
+  aspect-ratio: 1;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid var(--line);
+}
+.bed-tile.available { background: #EEF5EC; color: #3E7233; }
+.bed-tile.occupied { background: #F4E9E7; color: var(--red); }
+.bed-tile.cleaning { background: #FBF3E3; color: var(--amber); }
+.bed-tile.maintenance { background: #ECECEC; color: var(--muted); }
+
+/* ---------- Login ---------- */
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ink);
+}
+.login-card {
+  width: 360px;
+  background: var(--paper);
+  border-radius: 10px;
+  padding: 34px 30px;
+}
+.login-brand {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.login-brand .dot { color: var(--amber); }
+.login-sub {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 24px;
+}
