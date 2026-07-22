@@ -1,5 +1,5 @@
 // const BASE_URL = '/api';
-const BASE_URL = "https://backendforhospital-1.onrender.com";
+const BASE_URL = "https://backendforhospital-1.onrender.com/api";
 
 function getToken() {
   return localStorage.getItem('wardline_token');
