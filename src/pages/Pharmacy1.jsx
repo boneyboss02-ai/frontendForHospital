@@ -184,7 +184,7 @@ export default function Pharmacy() {
             <div className="form-row">
               <div className="field">
                 <label>Name</label>
-                <input required placeholder="e.g. Amoxicillin 500mg" value={medForm.name} onChange={(e) => setMedForm({ ...medForm, name: e.target.value })} />
+                <input required value={medForm.name} onChange={(e) => setMedForm({ ...medForm, name: e.target.value })} />
               </div>
               <div className="field">
                 <label>Unit</label>

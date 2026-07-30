@@ -59,7 +59,7 @@ export default function SearchPicker({ label, placeholder, fetchResults, onSelec
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           border: '1px solid var(--line)', borderRadius: 'var(--radius)', padding: '9px 11px',
-          background: 'var(--sky-100)',
+          background: '#FBFAF7',
         }}>
           <span style={{ fontSize: '0.9rem' }}>
             {value.label}

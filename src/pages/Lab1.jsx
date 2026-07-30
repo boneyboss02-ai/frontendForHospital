@@ -112,7 +112,7 @@ export default function Lab() {
               <SearchPicker label="Patient" required value={orderPatient} onSelect={setOrderPatient} fetchResults={patientFetcher} placeholder="Search patient by name or code…" />
               <div className="field">
                 <label>Test name</label>
-                <input required placeholder="e.g. Panoramic X-ray, Blood Test (pre-extraction)" value={testName} onChange={(e) => setTestName(e.target.value)} />
+                <input required placeholder="e.g. Complete Blood Count" value={testName} onChange={(e) => setTestName(e.target.value)} />
               </div>
             </div>
             <button className="btn btn-primary">Order test</button>

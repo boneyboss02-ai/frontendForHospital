@@ -36,7 +36,7 @@ export default function ResetPassword() {
     return (
       <div className="login-screen">
         <div className="login-card">
-          <div className="login-brand">Yoma<span className="dot">.</span></div>
+          <div className="login-brand">Wardline<span className="dot">.</span></div>
           <div className="error-banner">This reset link is missing its token. Please use the link from your email, or request a new one.</div>
           <div style={{ marginTop: 16, fontSize: '0.85rem', textAlign: 'center' }}>
             <Link to="/forgot-password">Request a new reset link</Link>
@@ -49,7 +49,7 @@ export default function ResetPassword() {
   return (
     <div className="login-screen">
       <div className="login-card">
-        <div className="login-brand">Yoma<span className="dot">.</span></div>
+        <div className="login-brand">Wardline<span className="dot">.</span></div>
         <div className="login-sub">Choose a new password</div>
 
         {error && <div className="error-banner">{error}</div>}

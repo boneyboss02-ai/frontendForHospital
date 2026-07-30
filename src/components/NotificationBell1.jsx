@@ -117,7 +117,7 @@ export default function NotificationBell() {
                 onClick={() => !n.read_at && markRead(n.id)}
                 style={{
                   padding: '10px 14px', borderBottom: '1px solid var(--line)', cursor: n.read_at ? 'default' : 'pointer',
-                  background: n.read_at ? 'transparent' : 'var(--sky-100)',
+                  background: n.read_at ? 'transparent' : '#FBFAF7',
                 }}
               >
                 <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: 2 }}>{n.title}</div>

@@ -30,7 +30,7 @@ export default function ForgotPassword() {
   return (
     <div className="login-screen">
       <div className="login-card">
-        <div className="login-brand">Yoma<span className="dot">.</span></div>
+        <div className="login-brand">Wardline<span className="dot">.</span></div>
         <div className="login-sub">Reset your password</div>
 
         {error && <div className="error-banner">{error}</div>}
@@ -50,7 +50,7 @@ export default function ForgotPassword() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@yoma.clinic"
+                placeholder="you@hospital.org"
                 required
               />
             </div>

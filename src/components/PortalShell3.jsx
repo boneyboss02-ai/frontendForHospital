@@ -9,7 +9,6 @@ const NAV_ITEMS = [
   { to: '/portal/lab-results', label: 'Lab Results' },
   { to: '/portal/prescriptions', label: 'Prescriptions' },
   { to: '/portal/billing', label: 'Billing' },
-  { to: '/portal/messages', label: 'Messages' },
 ];
 
 export default function PortalShell() {

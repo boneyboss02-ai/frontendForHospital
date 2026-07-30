@@ -193,16 +193,6 @@ export const api = {
     create: (payload) => request('/shifts', { method: 'POST', body: payload }),
     remove: (id) => request(`/shifts/${id}`, { method: 'DELETE' }),
   },
-
-  chat: {
-    contacts: () => request('/chat/contacts'),
-    conversations: () => request('/chat/conversations'),
-    startConversation: (payload) => request('/chat/conversations', { method: 'POST', body: payload }),
-    messages: (conversationId, before) =>
-      request(`/chat/conversations/${conversationId}/messages${before ? `?before=${before}` : ''}`),
-    sendMessage: (conversationId, body) =>
-      request(`/chat/conversations/${conversationId}/messages`, { method: 'POST', body: { body } }),
-  },
 };
 
 export { getToken };

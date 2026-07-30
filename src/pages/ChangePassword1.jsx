@@ -34,7 +34,7 @@ export default function ChangePassword() {
   return (
     <div className="login-screen">
       <div className="login-card">
-        <div className="login-brand">Yoma<span className="dot">.</span></div>
+        <div className="login-brand">Wardline<span className="dot">.</span></div>
         <div className="login-sub">
           {user?.must_change_password
             ? 'Please set a new password before continuing.'

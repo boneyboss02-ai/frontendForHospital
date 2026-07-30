@@ -82,13 +82,13 @@ export default function Dashboard() {
           {stats.admitted !== undefined && (
             <div className="stat-card">
               <div className="value">{stats.admitted}</div>
-              <div className="label">In treatment now</div>
+              <div className="label">Currently admitted</div>
             </div>
           )}
           {stats.totalBeds !== undefined && (
             <div className="stat-card">
               <div className="value">{stats.availableBeds}/{stats.totalBeds}</div>
-              <div className="label">Chairs available</div>
+              <div className="label">Beds available</div>
             </div>
           )}
           {stats.pendingRx !== undefined && (
@@ -110,8 +110,8 @@ export default function Dashboard() {
         <h3 style={{ marginBottom: 8 }}>Getting started</h3>
         <p style={{ color: 'var(--muted)', fontSize: '0.9rem', lineHeight: 1.6 }}>
           Use <strong>Patients</strong> to register new patients or search existing records,
-          <strong> Appointments</strong> to book and manage today's walk-in queue, and
-          <strong> Chairs &amp; Rooms</strong> to seat patients and track which treatment chairs are free.
+          <strong> Appointments</strong> to book and manage the outpatient queue, and
+          <strong> Wards &amp; Beds</strong> to admit, discharge, and track inpatient beds.
         </p>
       </div>
     </div>

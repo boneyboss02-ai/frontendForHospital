@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import Brand from '../components/Brand';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -32,8 +31,8 @@ export default function Login() {
   return (
     <div className="login-screen">
       <div className="login-card">
-        <div className="login-brand"><Brand size={28} style={{ color: 'var(--teal-500)' }} />Yoma<span className="dot">.</span></div>
-        <div className="login-sub">Sign in to your Yoma dental dashboard</div>
+        <div className="login-brand">Wardline<span className="dot">.</span></div>
+        <div className="login-sub">Sign in to your hospital dashboard</div>
 
         {error && <div className="error-banner">{error}</div>}
 
@@ -44,7 +43,7 @@ export default function Login() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@yoma.clinic"
+              placeholder="you@hospital.org"
               required
             />
           </div>

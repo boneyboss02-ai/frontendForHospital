@@ -22,14 +22,12 @@ import Availability from './pages/Availability';
 import Schedule from './pages/Schedule';
 import PrintInvoice from './pages/PrintInvoice';
 import PrintPrescription from './pages/PrintPrescription';
-import Messages from './pages/Messages';
 
 import PortalDashboard from './pages/portal/PortalDashboard';
 import PortalAppointments from './pages/portal/PortalAppointments';
 import PortalLabResults from './pages/portal/PortalLabResults';
 import PortalPrescriptions from './pages/portal/PortalPrescriptions';
 import PortalBilling from './pages/portal/PortalBilling';
-import PortalMessages from './pages/portal/PortalMessages';
 
 const STAFF_ROLES = ['admin', 'doctor', 'nurse', 'receptionist', 'pharmacist'];
 
@@ -77,14 +75,6 @@ export default function App() {
               }
             />
             <Route path="schedule" element={<Schedule />} />
-            <Route
-              path="messages"
-              element={
-                <ProtectedRoute roles={['doctor']}>
-                  <Messages />
-                </ProtectedRoute>
-              }
-            />
           </Route>
 
           {/* Print-friendly pages — deliberately outside Shell/PortalShell so
@@ -107,7 +97,6 @@ export default function App() {
             <Route path="lab-results" element={<PortalLabResults />} />
             <Route path="prescriptions" element={<PortalPrescriptions />} />
             <Route path="billing" element={<PortalBilling />} />
-            <Route path="messages" element={<PortalMessages />} />
           </Route>
         </Routes>
       </BrowserRouter>

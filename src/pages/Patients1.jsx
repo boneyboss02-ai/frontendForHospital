@@ -188,7 +188,7 @@ export default function Patients() {
                   </tr>
                   {invitingId === p.id && (
                     <tr>
-                      <td colSpan={6} style={{ background: 'var(--sky-100)' }}>
+                      <td colSpan={6} style={{ background: '#FBFAF7' }}>
                         {inviteResult ? (
                           <div style={{ padding: '14px 4px' }}>
                             <p style={{ marginTop: 0, fontSize: '0.85rem' }}>

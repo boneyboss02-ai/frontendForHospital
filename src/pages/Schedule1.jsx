@@ -126,9 +126,9 @@ export default function Schedule() {
             </div>
             <div className="form-row">
               <div className="field">
-                <label>Room (optional)</label>
+                <label>Ward (optional)</label>
                 <select value={wardId} onChange={(e) => setWardId(e.target.value)}>
-                  <option value="">No specific room</option>
+                  <option value="">No specific ward</option>
                   {wards.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
                 </select>
               </div>
@@ -155,7 +155,7 @@ export default function Schedule() {
         ) : (
           <table>
             <thead>
-              <tr><th>Staff</th><th>Role</th><th>Time</th><th>Room</th><th>Note</th>{isAdmin && <th></th>}</tr>
+              <tr><th>Staff</th><th>Role</th><th>Time</th><th>Ward</th><th>Note</th>{isAdmin && <th></th>}</tr>
             </thead>
             <tbody>
               {shifts.map((s) => (

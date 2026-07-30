@@ -45,7 +45,7 @@ export default function Register() {
   return (
     <div className="login-screen">
       <div className="login-card" style={{ width: 420 }}>
-        <div className="login-brand">Yoma<span className="dot">.</span></div>
+        <div className="login-brand">Wardline<span className="dot">.</span></div>
         <div className="login-sub">Create your patient portal account</div>
 
         <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>

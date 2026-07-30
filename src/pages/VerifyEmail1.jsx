@@ -23,7 +23,7 @@ export default function VerifyEmail() {
     return (
       <div className="login-screen">
         <div className="login-card">
-          <div className="login-brand">Yoma<span className="dot">.</span></div>
+          <div className="login-brand">Wardline<span className="dot">.</span></div>
           <p style={{ fontSize: '0.9rem', color: 'var(--muted)' }}>
             We don't have a pending signup to verify. If you just signed up, go back and try
             again; if you already have an account, sign in instead.
@@ -68,7 +68,7 @@ export default function VerifyEmail() {
   return (
     <div className="login-screen">
       <div className="login-card">
-        <div className="login-brand">Yoma<span className="dot">.</span></div>
+        <div className="login-brand">Wardline<span className="dot">.</span></div>
         <div className="login-sub">
           {email ? <>Enter the code we sent to <strong>{email}</strong></> : 'Enter your verification code'}
         </div>

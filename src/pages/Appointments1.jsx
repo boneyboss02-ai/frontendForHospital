@@ -137,7 +137,7 @@ export default function Appointments() {
             </div>
             <div className="field">
               <label>Reason for visit</label>
-              <input placeholder="e.g. Toothache, routine cleaning, whitening consult" value={reason} onChange={(e) => setReason(e.target.value)} />
+              <input value={reason} onChange={(e) => setReason(e.target.value)} />
             </div>
             <button className="btn btn-primary" disabled={!scheduledAt}>Book</button>
           </form>
@@ -184,7 +184,7 @@ export default function Appointments() {
                   </tr>
                   {completingId === a.id && (
                     <tr>
-                      <td colSpan={6} style={{ background: 'var(--sky-100)' }}>
+                      <td colSpan={6} style={{ background: '#FBFAF7' }}>
                         <form onSubmit={handleCompleteConsultation} style={{ padding: '14px 4px' }}>
                           <p style={{ fontSize: '0.82rem', color: 'var(--muted)', marginTop: 0, marginBottom: 10 }}>
                             Completing this visit will bill the consultation fee to the patient's invoice automatically (if one is set for this doctor).
@@ -192,11 +192,11 @@ export default function Appointments() {
                           <div className="form-row">
                             <div className="field">
                               <label>Diagnosis</label>
-                              <input placeholder="e.g. Dental caries — tooth #14" value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)} />
+                              <input value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)} />
                             </div>
                             <div className="field">
-                              <label>Treatment notes</label>
-                              <input placeholder="e.g. Composite filling placed, patient tolerated well" value={doctorNotes} onChange={(e) => setDoctorNotes(e.target.value)} />
+                              <label>Notes</label>
+                              <input value={doctorNotes} onChange={(e) => setDoctorNotes(e.target.value)} />
                             </div>
                           </div>
                           <div style={{ display: 'flex', gap: 8 }}>

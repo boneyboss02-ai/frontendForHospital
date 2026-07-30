@@ -1,7 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import NotificationBell from './NotificationBell';
-import Brand from './Brand';
 
 const NAV_ITEMS = [
   { to: '/portal', label: 'Overview', end: true },
@@ -24,7 +23,7 @@ export default function PortalShell() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand"><Brand size={24} />Yoma<span className="dot">.</span></div>
+        <div className="brand">Wardline<span className="dot">.</span></div>
         <nav>
           {NAV_ITEMS.map((item) => (
             <NavLink

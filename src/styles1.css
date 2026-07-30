@@ -1,28 +1,22 @@
 :root {
-  /* Palette — warm & friendly: soft sky blue + cream, dental-clinic vibe */
-  --ink: #2B3A55;          /* soft navy, primary text/dark surfaces */
-  --teal-900: #2C4A7C;     /* kept var name for drop-in compatibility */
-  --teal-700: #3E6FB0;
-  --teal-500: #5B93D9;     /* primary action color — soft sky blue */
-  --paper: #FDF8F0;        /* warm cream background */
+  /* Palette */
+  --ink: #12242B;          /* near-black teal, primary text/dark surfaces */
+  --teal-900: #0F3A3E;
+  --teal-700: #1D5C5F;
+  --teal-500: #2E8A82;     /* primary action color */
+  --paper: #F7F5F0;        /* warm off-white background */
   --paper-raised: #FFFFFF;
-  --line: #EAE2D2;
-  --amber: #F2946D;        /* alerts / attention accent — warm coral */
-  --red: #D9695A;          /* critical / cancel — softened red */
-  --muted: #7C8798;
-
-  /* Extra dental-flavored accents, available alongside the palette above */
-  --mint: #7FC8A9;         /* healthy/success tint, used sparingly */
-  --sky-100: #EAF2FB;      /* very light blue, tinted surfaces */
-  --cream-100: #FBF4E6;    /* very light cream, tinted surfaces */
+  --line: #DDE3DF;
+  --amber: #D98E3E;        /* alerts / attention accent */
+  --red: #B5473C;          /* critical / cancel */
+  --muted: #6B7A78;
 
   /* Type */
-  --font-display: 'Quicksand', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
 
-  --radius: 14px;
-  --radius-sm: 10px;
+  --radius: 6px;
 }
 
 * { box-sizing: border-box; }
@@ -55,70 +49,61 @@ a { color: var(--teal-700); }
 .app-shell {
   display: flex;
   min-height: 100vh;
-  gap: 20px;
-  padding: 20px;
-  background: var(--paper);
 }
 
 .sidebar {
-  width: 224px;
+  width: 220px;
   background: var(--ink);
   color: #EDEFEC;
   display: flex;
   flex-direction: column;
-  padding: 22px 0;
+  padding: 20px 0;
   flex-shrink: 0;
-  border-radius: 20px;
-  box-shadow: 0 8px 24px rgba(43, 58, 85, 0.18);
-  height: calc(100vh - 40px);
-  position: sticky;
-  top: 20px;
 }
 
 .sidebar .brand {
   font-family: var(--font-display);
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 700;
   padding: 0 20px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.12);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
   margin-bottom: 12px;
   display: flex;
-  align-items: center;
-  gap: 9px;
+  align-items: baseline;
+  gap: 6px;
 }
 .sidebar .brand .dot { color: var(--amber); }
-.sidebar .brand .tooth-icon { flex-shrink: 0; }
 
 .nav-link {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 2px 10px;
-  padding: 10px 12px;
-  color: #C4CEDE;
+  padding: 11px 20px;
+  color: #B9C4C1;
   text-decoration: none;
   font-size: 0.92rem;
   font-weight: 500;
-  border-radius: var(--radius-sm);
+  border-left: 3px solid transparent;
   transition: all 0.15s ease;
 }
-.nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
+.nav-link:hover { color: #fff; background: rgba(255,255,255,0.04); }
 .nav-link.active {
   color: #fff;
-  background: var(--teal-500);
+  border-left-color: var(--amber);
+  background: rgba(255,255,255,0.06);
 }
 
 .nav-role {
   margin-top: auto;
   padding: 16px 20px 4px;
   font-size: 0.78rem;
-  color: #93A0B5;
-  border-top: 1px solid rgba(255,255,255,0.12);
+  color: #7C8B88;
+  border-top: 1px solid rgba(255,255,255,0.1);
 }
 
 .main {
   flex: 1;
-  padding: 12px 32px 32px;
+  padding: 32px 40px;
   max-width: 1200px;
 }
 
@@ -183,7 +168,7 @@ th {
 }
 td { padding: 12px; border-bottom: 1px solid var(--line); }
 tr:last-child td { border-bottom: none; }
-tr:hover td { background: var(--sky-100); }
+tr:hover td { background: #FBFAF7; }
 
 .badge {
   display: inline-block;
@@ -193,17 +178,17 @@ tr:hover td { background: var(--sky-100); }
   font-weight: 600;
   font-family: var(--font-mono);
 }
-.badge.ok { background: #E4F3EB; color: #3E8562; }
-.badge.wait { background: #FCE9DF; color: #C96B3F; }
-.badge.busy { background: #FBE3DE; color: var(--red); }
-.badge.neutral { background: var(--sky-100); color: var(--muted); }
+.badge.ok { background: #E4F0DD; color: #3E7233; }
+.badge.wait { background: #FBEBD6; color: var(--amber); }
+.badge.busy { background: #FBE4E1; color: var(--red); }
+.badge.neutral { background: #E7ECEB; color: var(--muted); }
 
 /* ---------- Forms ---------- */
 input, select, textarea {
   width: 100%;
   padding: 9px 11px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   font-family: var(--font-body);
   font-size: 0.9rem;
   background: var(--paper-raised);
@@ -225,18 +210,17 @@ label {
 
 .btn {
   display: inline-block;
-  padding: 9px 20px;
-  border-radius: 100px;
+  padding: 9px 18px;
+  border-radius: var(--radius);
   border: none;
   font-weight: 600;
   font-size: 0.88rem;
-  transition: all 0.15s ease;
 }
-.btn-primary { background: var(--teal-500); color: #fff; }
-.btn-primary:hover { background: var(--teal-700); }
+.btn-primary { background: var(--teal-900); color: #fff; }
+.btn-primary:hover { background: var(--ink); }
 .btn-ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
-.btn-ghost:hover { border-color: var(--teal-500); color: var(--teal-700); }
-.btn-sm { padding: 5px 14px; font-size: 0.78rem; }
+.btn-ghost:hover { border-color: var(--teal-500); }
+.btn-sm { padding: 5px 12px; font-size: 0.78rem; }
 
 .error-banner {
   background: #FBE4E1;
@@ -322,10 +306,10 @@ label {
   font-weight: 600;
   border: 1px solid var(--line);
 }
-.bed-tile.available { background: #E4F3EB; color: #3E8562; }
-.bed-tile.occupied { background: #FBE3DE; color: var(--red); }
-.bed-tile.cleaning { background: #FCE9DF; color: #C96B3F; }
-.bed-tile.maintenance { background: var(--sky-100); color: var(--muted); }
+.bed-tile.available { background: #EEF5EC; color: #3E7233; }
+.bed-tile.occupied { background: #F4E9E7; color: var(--red); }
+.bed-tile.cleaning { background: #FBF3E3; color: var(--amber); }
+.bed-tile.maintenance { background: #ECECEC; color: var(--muted); }
 
 /* ---------- Login ---------- */
 .login-screen {
@@ -333,23 +317,19 @@ label {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(160deg, var(--sky-100) 0%, var(--paper) 55%, var(--cream-100) 100%);
+  background: var(--ink);
 }
 .login-card {
-  width: 380px;
-  background: var(--paper-raised);
-  border-radius: 22px;
-  padding: 38px 34px;
-  box-shadow: 0 16px 40px rgba(43, 58, 85, 0.12);
+  width: 360px;
+  background: var(--paper);
+  border-radius: 10px;
+  padding: 34px 30px;
 }
 .login-brand {
   font-family: var(--font-display);
-  font-size: 1.55rem;
+  font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 .login-brand .dot { color: var(--amber); }
 .login-sub {

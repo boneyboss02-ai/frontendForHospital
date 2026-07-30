@@ -39,7 +39,7 @@ export default function Beds() {
   useEffect(() => { load(); }, []);
 
   async function handleDischarge(admissionId) {
-    const summary = window.prompt('Visit summary (optional):') || '';
+    const summary = window.prompt('Discharge summary (optional):') || '';
     try {
       await api.inpatient.discharge(admissionId, summary);
       load();
@@ -49,7 +49,7 @@ export default function Beds() {
   }
 
   async function handleMarkAvailable(bed) {
-    const verb = bed.status === 'cleaning' ? 'Mark this chair as clean and available again?' : 'Mark this chair as available again (maintenance complete)?';
+    const verb = bed.status === 'cleaning' ? 'Mark this bed as clean and available again?' : 'Mark this bed as available again (maintenance complete)?';
     if (!window.confirm(verb)) return;
     try {
       await api.inpatient.updateBedStatus(bed.id, 'available');
@@ -63,7 +63,7 @@ export default function Beds() {
     e.preventDefault();
     setError('');
     if (!admitPatient || !admitBedId) {
-      setError('Please select a patient and a chair.');
+      setError('Please select a patient and a bed.');
       return;
     }
     try {
@@ -96,11 +96,11 @@ export default function Beds() {
     <div>
       <div className="page-header">
         <div>
-          <div className="eyebrow">Treatment rooms</div>
-          <h1>Chairs &amp; Rooms</h1>
+          <div className="eyebrow">Inpatient</div>
+          <h1>Wards &amp; Beds</h1>
         </div>
         <button className="btn btn-primary" onClick={() => setShowAdmitForm((s) => !s)}>
-          {showAdmitForm ? 'Cancel' : '+ Seat patient'}
+          {showAdmitForm ? 'Cancel' : '+ Admit patient'}
         </button>
       </div>
 
@@ -108,7 +108,7 @@ export default function Beds() {
 
       {showAdmitForm && (
         <div className="card" style={{ marginBottom: 24 }}>
-          <h3 style={{ marginBottom: 16 }}>Seat patient</h3>
+          <h3 style={{ marginBottom: 16 }}>Admit patient</h3>
           <form onSubmit={handleAdmit}>
             <div className="form-row">
               <SearchPicker label="Patient" required value={admitPatient} onSelect={setAdmitPatient} fetchResults={patientFetcher} placeholder="Search patient by name or code…" />
@@ -116,23 +116,23 @@ export default function Beds() {
             </div>
             <div className="form-row">
               <div className="field">
-                <label>Chair *</label>
+                <label>Bed *</label>
                 <select required value={admitBedId} onChange={(e) => setAdmitBedId(e.target.value)}>
-                  <option value="">Select an available chair</option>
+                  <option value="">Select an available bed</option>
                   {availableBeds.map((b) => (
                     <option key={b.id} value={b.id}>{b.ward_name} — {b.bed_number}</option>
                   ))}
                 </select>
                 {availableBeds.length === 0 && (
-                  <p style={{ fontSize: '0.78rem', color: 'var(--red)', marginTop: 4 }}>No chairs currently available.</p>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--red)', marginTop: 4 }}>No beds currently available.</p>
                 )}
               </div>
               <div className="field">
-                <label>Reason for visit</label>
+                <label>Admission reason</label>
                 <input value={admitReason} onChange={(e) => setAdmitReason(e.target.value)} />
               </div>
             </div>
-            <button className="btn btn-primary">Seat patient</button>
+            <button className="btn btn-primary">Admit</button>
           </form>
         </div>
       )}
@@ -142,9 +142,9 @@ export default function Beds() {
       ) : (
         <>
           <div className="card" style={{ marginBottom: 24 }}>
-            <h3 style={{ marginBottom: 14 }}>Chair map</h3>
+            <h3 style={{ marginBottom: 14 }}>Bed map</h3>
             {Object.keys(wardGroups).length === 0 ? (
-              <p style={{ color: 'var(--muted)' }}>No rooms configured yet.</p>
+              <p style={{ color: 'var(--muted)' }}>No wards configured yet.</p>
             ) : (
               <div className="ward-map">
                 {Object.entries(wardGroups).map(([wardName, wardBeds]) => (
@@ -178,21 +178,21 @@ export default function Beds() {
             </div>
             {canManageBeds && (
               <p style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: 8 }}>
-                Click a cleaning or maintenance chair to mark it available again.
+                Click a cleaning or maintenance bed to mark it available again.
               </p>
             )}
           </div>
 
           <div className="card">
-            <h3 style={{ marginBottom: 14 }}>Currently in treatment</h3>
+            <h3 style={{ marginBottom: 14 }}>Currently admitted</h3>
             {admissions.length === 0 ? (
-              <p style={{ color: 'var(--muted)' }}>No patients currently in treatment.</p>
+              <p style={{ color: 'var(--muted)' }}>No patients currently admitted.</p>
             ) : (
               <table>
                 <thead>
                   <tr>
                     <th>Patient</th>
-                    <th>Room / Chair</th>
+                    <th>Ward / Bed</th>
                     <th>Doctor</th>
                     <th>Admitted</th>
                     <th></th>
@@ -206,7 +206,7 @@ export default function Beds() {
                       <td>{a.doctor_name || '—'}</td>
                       <td>{new Date(a.admitted_at).toLocaleDateString()}</td>
                       <td>
-                        <button className="btn btn-ghost btn-sm" onClick={() => handleDischarge(a.id)}>Finish visit</button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => handleDischarge(a.id)}>Discharge</button>
                       </td>
                     </tr>
                   ))}

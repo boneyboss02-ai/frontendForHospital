@@ -1,17 +1,19 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import NotificationBell from './NotificationBell';
+import Brand from './Brand';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', end: true, roles: ['admin', 'receptionist'] },
   { to: '/patients', label: 'Patients' },
   { to: '/appointments', label: 'Appointments' },
-  { to: '/beds', label: 'Wards & Beds' },
+  { to: '/beds', label: 'Chairs & Rooms' },
   { to: '/lab', label: 'Lab' },
   { to: '/pharmacy', label: 'Pharmacy' },
   { to: '/billing', label: 'Billing' },
   { to: '/availability', label: 'My Schedule', roles: ['admin', 'doctor'] },
   { to: '/schedule', label: "Who's on Duty" },
+  { to: '/messages', label: 'Messages', roles: ['doctor'] },
 ];
 
 export default function Shell() {
@@ -26,7 +28,7 @@ export default function Shell() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand">Wardline<span className="dot">.</span></div>
+        <div className="brand"><Brand size={24} />Yoma<span className="dot">.</span></div>
         <nav>
           {NAV_ITEMS.filter((item) => !item.roles || item.roles.includes(user?.role)).map((item) => (
             <NavLink
