@@ -9,9 +9,7 @@ const doctorFetcher = makeDoctorFetcher(api);
 export default function Beds() {
   const { user } = useAuth();
   const canManageBeds = user?.role === 'admin' || user?.role === 'nurse';
-  const isAdmin = user?.role === 'admin';
   const [beds, setBeds] = useState([]);
-  const [rooms, setRooms] = useState([]);
   const [admissions, setAdmissions] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -22,23 +20,15 @@ export default function Beds() {
   const [admitBedId, setAdmitBedId] = useState('');
   const [admitReason, setAdmitReason] = useState('');
 
-  const [showManageForm, setShowManageForm] = useState(false);
-  const [newRoomName, setNewRoomName] = useState('');
-  const [newRoomFloor, setNewRoomFloor] = useState('');
-  const [newChairRoomId, setNewChairRoomId] = useState('');
-  const [newChairNumber, setNewChairNumber] = useState('');
-
   async function load() {
     setLoading(true);
     try {
-      const [bedsRes, admissionsRes, roomsRes] = await Promise.all([
+      const [bedsRes, admissionsRes] = await Promise.all([
         api.inpatient.beds(),
         api.inpatient.admissions({ status: 'admitted' }),
-        api.inpatient.wards(),
       ]);
       setBeds(bedsRes.beds);
       setAdmissions(admissionsRes.admissions);
-      setRooms(roomsRes.wards);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -94,39 +84,6 @@ export default function Beds() {
     }
   }
 
-  async function handleCreateRoom(e) {
-    e.preventDefault();
-    setError('');
-    if (!newRoomName.trim()) {
-      setError('Room name is required.');
-      return;
-    }
-    try {
-      await api.inpatient.createWard({ name: newRoomName.trim(), floor: newRoomFloor || undefined });
-      setNewRoomName('');
-      setNewRoomFloor('');
-      load();
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  async function handleCreateChair(e) {
-    e.preventDefault();
-    setError('');
-    if (!newChairRoomId || !newChairNumber.trim()) {
-      setError('Please pick a room and enter a chair number.');
-      return;
-    }
-    try {
-      await api.inpatient.createBed({ ward_id: Number(newChairRoomId), bed_number: newChairNumber.trim() });
-      setNewChairNumber('');
-      load();
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
   const availableBeds = beds.filter((b) => b.status === 'available');
 
   const wardGroups = beds.reduce((acc, bed) => {
@@ -142,59 +99,12 @@ export default function Beds() {
           <div className="eyebrow">Treatment rooms</div>
           <h1>Chairs &amp; Rooms</h1>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          {isAdmin && (
-            <button className="btn btn-ghost" onClick={() => setShowManageForm((s) => !s)}>
-              {showManageForm ? 'Cancel' : '+ Add room / chair'}
-            </button>
-          )}
-          <button className="btn btn-primary" onClick={() => setShowAdmitForm((s) => !s)}>
-            {showAdmitForm ? 'Cancel' : '+ Seat patient'}
-          </button>
-        </div>
+        <button className="btn btn-primary" onClick={() => setShowAdmitForm((s) => !s)}>
+          {showAdmitForm ? 'Cancel' : '+ Seat patient'}
+        </button>
       </div>
 
       {error && <div className="error-banner">{error}</div>}
-
-      {isAdmin && showManageForm && (
-        <div className="card" style={{ marginBottom: 24 }}>
-          <h3 style={{ marginBottom: 16 }}>Add a room or chair</h3>
-          <div className="form-row">
-            <form onSubmit={handleCreateRoom} style={{ flex: 1 }}>
-              <div className="field">
-                <label>New room name *</label>
-                <input placeholder="e.g. Operatory 1, Consult Room A" value={newRoomName} onChange={(e) => setNewRoomName(e.target.value)} />
-              </div>
-              <div className="field">
-                <label>Floor (optional)</label>
-                <input placeholder="e.g. Ground Floor" value={newRoomFloor} onChange={(e) => setNewRoomFloor(e.target.value)} />
-              </div>
-              <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }}>Add room</button>
-            </form>
-            <form onSubmit={handleCreateChair} style={{ flex: 1 }}>
-              <div className="field">
-                <label>Room *</label>
-                <select required value={newChairRoomId} onChange={(e) => setNewChairRoomId(e.target.value)}>
-                  <option value="">Select a room</option>
-                  {rooms.map((r) => (
-                    <option key={r.id} value={r.id}>{r.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label>Chair number *</label>
-                <input placeholder="e.g. 1, 2, 3" value={newChairNumber} onChange={(e) => setNewChairNumber(e.target.value)} />
-              </div>
-              <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }}>Add chair</button>
-            </form>
-          </div>
-          {rooms.length === 0 && (
-            <p style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: 10 }}>
-              Add a room first — chairs need a room to belong to.
-            </p>
-          )}
-        </div>
-      )}
 
       {showAdmitForm && (
         <div className="card" style={{ marginBottom: 24 }}>

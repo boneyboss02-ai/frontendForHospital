@@ -152,8 +152,6 @@ export const api = {
       return request(`/inpatient/beds${qs ? `?${qs}` : ''}`);
     },
     wards: () => request('/inpatient/wards'),
-    createWard: (payload) => request('/inpatient/wards', { method: 'POST', body: payload }),
-    createBed: (payload) => request('/inpatient/beds', { method: 'POST', body: payload }),
     updateBedStatus: (id, status) => request(`/inpatient/beds/${id}/status`, { method: 'PATCH', body: { status } }),
     admissions: (params = {}) => {
       const qs = new URLSearchParams(params).toString();
@@ -194,6 +192,16 @@ export const api = {
     },
     create: (payload) => request('/shifts', { method: 'POST', body: payload }),
     remove: (id) => request(`/shifts/${id}`, { method: 'DELETE' }),
+  },
+
+  chat: {
+    contacts: () => request('/chat/contacts'),
+    conversations: () => request('/chat/conversations'),
+    startConversation: (payload) => request('/chat/conversations', { method: 'POST', body: payload }),
+    messages: (conversationId, before) =>
+      request(`/chat/conversations/${conversationId}/messages${before ? `?before=${before}` : ''}`),
+    sendMessage: (conversationId, body) =>
+      request(`/chat/conversations/${conversationId}/messages`, { method: 'POST', body: { body } }),
   },
 };
 
