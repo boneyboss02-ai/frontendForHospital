@@ -15,7 +15,7 @@ export default function PrintPrescription() {
   useEffect(() => {
     async function load() {
       try {
-        const result = isPatient ? await api.portal.getPrescription(id) : await api.prescriptions.get(id);
+        const result = isPatient ? await api.portal.getPrescription(id) : await api.pharmacy.getPrescription(id);
         setData(result);
         if (isPatient && !result.prescription.patient_name) {
           const { patient } = await api.portal.me();

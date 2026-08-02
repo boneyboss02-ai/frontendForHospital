@@ -136,7 +136,7 @@ export function makeStaffFetcher(api) {
 
 export function makeMedicineFetcher(api) {
   return async (query) => {
-    const { items } = await api.inventory.items({ search: query, category: 'medicine' });
-    return items.map((m) => ({ id: m.id, label: m.name, sublabel: `${m.stock_quantity} ${m.unit} in stock` }));
+    const { medicines } = await api.pharmacy.medicines({ search: query });
+    return medicines.map((m) => ({ id: m.id, label: m.name, sublabel: `${m.stock_quantity} ${m.unit} in stock` }));
   };
 }

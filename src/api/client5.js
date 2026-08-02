@@ -51,7 +51,6 @@ export const api = {
     create: (payload) => request('/patients', { method: 'POST', body: payload }),
     update: (id, payload) => request(`/patients/${id}`, { method: 'PUT', body: payload }),
     invite: (id, payload) => request(`/patients/${id}/invite`, { method: 'POST', body: payload }),
-    history: (id) => request(`/patients/${id}/history`),
   },
 
   appointments: {
@@ -118,22 +117,22 @@ export const api = {
     },
   },
 
-  inventory: {
-    items: (params = {}) => {
+  pharmacy: {
+    medicines: (params = {}) => {
       const qs = new URLSearchParams(params).toString();
-      return request(`/inventory/items${qs ? `?${qs}` : ''}`);
+      return request(`/pharmacy/medicines${qs ? `?${qs}` : ''}`);
     },
-    createItem: (payload) => request('/inventory/items', { method: 'POST', body: payload }),
-    adjustStock: (id, delta) => request(`/inventory/items/${id}/stock`, { method: 'PATCH', body: { delta } }),
-  },
+    createMedicine: (payload) => request('/pharmacy/medicines', { method: 'POST', body: payload }),
+    adjustStock: (id, delta) => request(`/pharmacy/medicines/${id}/stock`, { method: 'PATCH', body: { delta } }),
 
-  prescriptions: {
-    list: (params = {}) => {
+    prescriptions: (params = {}) => {
       const qs = new URLSearchParams(params).toString();
-      return request(`/prescriptions${qs ? `?${qs}` : ''}`);
+      return request(`/pharmacy/prescriptions${qs ? `?${qs}` : ''}`);
     },
-    create: (payload) => request('/prescriptions', { method: 'POST', body: payload }),
-    get: (id) => request(`/prescriptions/${id}`),
+    createPrescription: (payload) => request('/pharmacy/prescriptions', { method: 'POST', body: payload }),
+    getPrescription: (id) => request(`/pharmacy/prescriptions/${id}`),
+    dispenseItem: (itemId, quantity) =>
+      request(`/pharmacy/prescription-items/${itemId}/dispense`, { method: 'PATCH', body: { quantity } }),
   },
 
   billing: {
@@ -195,13 +194,6 @@ export const api = {
     },
     create: (payload) => request('/shifts', { method: 'POST', body: payload }),
     remove: (id) => request(`/shifts/${id}`, { method: 'DELETE' }),
-  },
-
-  reports: {
-    overview: (params = {}) => {
-      const qs = new URLSearchParams(params).toString();
-      return request(`/reports/overview${qs ? `?${qs}` : ''}`);
-    },
   },
 };
 

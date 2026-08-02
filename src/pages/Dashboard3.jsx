@@ -16,11 +16,11 @@ export default function Dashboard() {
   useEffect(() => {
     async function load() {
       const today = new Date().toISOString().slice(0, 10);
-      const [appts, admissions, beds, lowStock, unpaidInvoices] = await Promise.allSettled([
+      const [appts, admissions, beds, pendingRx, unpaidInvoices] = await Promise.allSettled([
         api.appointments.list({ date: today }),
         api.inpatient.admissions({ status: 'admitted' }),
         api.inpatient.beds(),
-        api.inventory.items({ low_stock: 'true' }),
+        api.pharmacy.prescriptions({ pending: 'true' }),
         api.billing.invoices({ status: 'unpaid' }),
       ]);
 
@@ -36,8 +36,8 @@ export default function Dashboard() {
         next.availableBeds = beds.value.beds.filter((b) => b.status === 'available').length;
         next.totalBeds = beds.value.beds.length;
       }
-      if (lowStock.status === 'fulfilled') {
-        next.lowStock = lowStock.value.items.length;
+      if (pendingRx.status === 'fulfilled') {
+        next.pendingRx = pendingRx.value.prescriptions.length;
       }
       if (unpaidInvoices.status === 'fulfilled') {
         next.unpaidInvoices = unpaidInvoices.value.invoices.length;
@@ -47,7 +47,7 @@ export default function Dashboard() {
       // Only surface an error if something genuinely unexpected failed
       // (e.g. the server is down) — a 403 on a permission this role
       // doesn't have just means that card is quietly omitted above.
-      const unexpectedFailure = [appts, admissions, beds, lowStock, unpaidInvoices]
+      const unexpectedFailure = [appts, admissions, beds, pendingRx, unpaidInvoices]
         .find((r) => r.status === 'rejected' && !String(r.reason?.message).includes('permission'));
       if (unexpectedFailure) setError(unexpectedFailure.reason.message);
     }
@@ -91,10 +91,10 @@ export default function Dashboard() {
               <div className="label">Chairs available</div>
             </div>
           )}
-          {stats.lowStock !== undefined && (
+          {stats.pendingRx !== undefined && (
             <div className="stat-card">
-              <div className="value">{stats.lowStock}</div>
-              <div className="label">Low stock items</div>
+              <div className="value">{stats.pendingRx}</div>
+              <div className="label">Prescriptions to dispense</div>
             </div>
           )}
           {stats.unpaidInvoices !== undefined && (

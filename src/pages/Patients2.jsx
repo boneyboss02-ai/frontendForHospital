@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 
 const EMPTY_FORM = {
@@ -8,7 +7,6 @@ const EMPTY_FORM = {
 };
 
 export default function Patients() {
-  const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -167,7 +165,6 @@ export default function Patients() {
                 <th>Phone</th>
                 <th>Blood group</th>
                 <th>Portal</th>
-                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -188,11 +185,10 @@ export default function Patients() {
                         <button className="btn btn-ghost btn-sm" onClick={() => startInvite(p)}>Invite</button>
                       )}
                     </td>
-                    <td><button className="btn btn-ghost btn-sm" onClick={() => navigate(`/patients/${p.id}`)}>View history</button></td>
                   </tr>
                   {invitingId === p.id && (
                     <tr>
-                      <td colSpan={7} style={{ background: 'var(--sky-100)' }}>
+                      <td colSpan={6} style={{ background: 'var(--sky-100)' }}>
                         {inviteResult ? (
                           <div style={{ padding: '14px 4px' }}>
                             <p style={{ marginTop: 0, fontSize: '0.85rem' }}>

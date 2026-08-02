@@ -51,7 +51,6 @@ export const api = {
     create: (payload) => request('/patients', { method: 'POST', body: payload }),
     update: (id, payload) => request(`/patients/${id}`, { method: 'PUT', body: payload }),
     invite: (id, payload) => request(`/patients/${id}/invite`, { method: 'POST', body: payload }),
-    history: (id) => request(`/patients/${id}/history`),
   },
 
   appointments: {
@@ -195,13 +194,6 @@ export const api = {
     },
     create: (payload) => request('/shifts', { method: 'POST', body: payload }),
     remove: (id) => request(`/shifts/${id}`, { method: 'DELETE' }),
-  },
-
-  reports: {
-    overview: (params = {}) => {
-      const qs = new URLSearchParams(params).toString();
-      return request(`/reports/overview${qs ? `?${qs}` : ''}`);
-    },
   },
 };
 

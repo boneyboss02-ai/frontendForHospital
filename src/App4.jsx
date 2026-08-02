@@ -13,19 +13,15 @@ import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
 
 import Patients from './pages/Patients';
-import PatientDetail from './pages/PatientDetail';
 import Appointments from './pages/Appointments';
 import Beds from './pages/Beds';
 import Lab from './pages/Lab';
-import Inventory from './pages/Inventory';
-import Prescriptions from './pages/Prescriptions';
+import Pharmacy from './pages/Pharmacy';
 import Billing from './pages/Billing';
-import Reports from './pages/Reports';
 import Availability from './pages/Availability';
 import Schedule from './pages/Schedule';
 import PrintInvoice from './pages/PrintInvoice';
 import PrintPrescription from './pages/PrintPrescription';
-import PrintPatientReport from './pages/PrintPatientReport';
 import Messages from './pages/Messages';
 
 import PortalDashboard from './pages/portal/PortalDashboard';
@@ -35,7 +31,7 @@ import PortalPrescriptions from './pages/portal/PortalPrescriptions';
 import PortalBilling from './pages/portal/PortalBilling';
 import PortalMessages from './pages/portal/PortalMessages';
 
-const STAFF_ROLES = ['admin', 'doctor', 'nurse', 'receptionist'];
+const STAFF_ROLES = ['admin', 'doctor', 'nurse', 'receptionist', 'pharmacist'];
 
 export default function App() {
   return (
@@ -67,28 +63,11 @@ export default function App() {
           >
             <Route index element={<RoleHome />} />
             <Route path="patients" element={<Patients />} />
-            <Route path="patients/:id" element={<PatientDetail />} />
             <Route path="appointments" element={<Appointments />} />
             <Route path="beds" element={<Beds />} />
             <Route path="lab" element={<Lab />} />
-            <Route path="prescriptions" element={<Prescriptions />} />
-            <Route
-              path="inventory"
-              element={
-                <ProtectedRoute roles={['admin', 'nurse']}>
-                  <Inventory />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="pharmacy" element={<Pharmacy />} />
             <Route path="billing" element={<Billing />} />
-            <Route
-              path="reports"
-              element={
-                <ProtectedRoute roles={['admin', 'receptionist']}>
-                  <Reports />
-                </ProtectedRoute>
-              }
-            />
             <Route
               path="availability"
               element={
@@ -113,14 +92,6 @@ export default function App() {
               ProtectedRoute so a logged-out tab can't load someone's invoice. */}
           <Route path="/print/invoice/:id" element={<ProtectedRoute><PrintInvoice /></ProtectedRoute>} />
           <Route path="/print/prescription/:id" element={<ProtectedRoute><PrintPrescription /></ProtectedRoute>} />
-          <Route
-            path="/print/patient-report/:id"
-            element={
-              <ProtectedRoute roles={['admin', 'receptionist', 'doctor', 'nurse']}>
-                <PrintPatientReport />
-              </ProtectedRoute>
-            }
-          />
 
           {/* Patient self-service portal */}
           <Route
