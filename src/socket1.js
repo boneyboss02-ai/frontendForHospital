@@ -1,16 +1,11 @@
 import { io } from 'socket.io-client';
-import { getToken, BASE_URL } from './api/client';
+import { getToken } from './api/client';
 
 let socket = null;
 
-// Derived from the same BASE_URL api/client.js uses for REST calls (just
-// strip the trailing /api), so there's exactly one place to update the
-// backend URL, not two. (Previously hardcoded to 'http://localhost:4000',
-// which only ever worked in local dev and silently broke every WebSocket
-// connection once deployed — this is what that "if you deploy this
-// somewhere other than localhost, update both places" comment was warning
-// about, and it just wasn't updated.)
-const BACKEND_URL = BASE_URL.replace(/\/api\/?$/, '');
+// Matches the dev backend URL hardcoded in vite.config.js's proxy target.
+// If you deploy this somewhere other than localhost, update both places.
+const BACKEND_URL = 'http://localhost:4000';
 
 // Lazily creates (or reuses) a single socket connection, authenticated with
 // the same JWT as REST calls. Call disconnectSocket() on logout so a stale
