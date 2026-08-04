@@ -21,7 +21,6 @@ import Inventory from './pages/Inventory';
 import Prescriptions from './pages/Prescriptions';
 import Billing from './pages/Billing';
 import Reports from './pages/Reports';
-import Expenses from './pages/Expenses';
 import Availability from './pages/Availability';
 import Schedule from './pages/Schedule';
 import PrintInvoice from './pages/PrintInvoice';
@@ -87,14 +86,6 @@ export default function App() {
               element={
                 <ProtectedRoute roles={['admin', 'receptionist']}>
                   <Reports />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="expenses"
-              element={
-                <ProtectedRoute roles={['admin']}>
-                  <Expenses />
                 </ProtectedRoute>
               }
             />

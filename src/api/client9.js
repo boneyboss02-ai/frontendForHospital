@@ -204,15 +204,6 @@ export const api = {
     },
   },
 
-  expenses: {
-    list: (params = {}) => {
-      const qs = new URLSearchParams(params).toString();
-      return request(`/expenses${qs ? `?${qs}` : ''}`);
-    },
-    create: (payload) => request('/expenses', { method: 'POST', body: payload }),
-    remove: (id) => request(`/expenses/${id}`, { method: 'DELETE' }),
-  },
-
   chat: {
     contacts: () => request('/chat/contacts'),
     conversations: () => request('/chat/conversations'),

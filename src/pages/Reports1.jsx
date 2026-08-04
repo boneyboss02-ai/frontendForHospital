@@ -93,18 +93,6 @@ export default function Reports() {
               <div className="value">{data.low_stock_count}</div>
               <div className="label">Low stock items</div>
             </div>
-            {data.expenses !== undefined && (
-              <>
-                <div className="stat-card">
-                  <div className="value">{data.expenses.toFixed(2)}</div>
-                  <div className="label">Expenses</div>
-                </div>
-                <div className="stat-card">
-                  <div className="value" style={{ color: data.profit >= 0 ? 'inherit' : 'var(--red)' }}>{data.profit.toFixed(2)}</div>
-                  <div className="label">Profit</div>
-                </div>
-              </>
-            )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
@@ -166,22 +154,6 @@ export default function Reports() {
                 ))
               )}
             </div>
-
-            {data.expenses_by_category !== undefined && (
-              <div className="card">
-                <h3 style={{ marginBottom: 14 }}>Expenses by category</h3>
-                {data.expenses_by_category.length === 0 ? (
-                  <p style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>No expenses recorded in this range.</p>
-                ) : (
-                  (() => {
-                    const max = Math.max(...data.expenses_by_category.map((d) => d.total));
-                    return data.expenses_by_category.map((d) => (
-                      <BarRow key={d.category} label={d.category} value={d.total} max={max} formatValue={(v) => v.toFixed(2)} />
-                    ));
-                  })()
-                )}
-              </div>
-            )}
           </div>
         </>
       )}
