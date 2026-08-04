@@ -79,11 +79,6 @@ export default function PatientDetail() {
                   {a.reason && <div style={{ fontSize: '0.85rem', color: 'var(--muted)', marginTop: 4 }}>Reason: {a.reason}</div>}
                   {a.diagnosis && <div style={{ fontSize: '0.85rem', marginTop: 4 }}><strong>Diagnosis:</strong> {a.diagnosis}</div>}
                   {a.doctor_notes && <div style={{ fontSize: '0.85rem', marginTop: 2 }}><strong>Treatment notes:</strong> {a.doctor_notes}</div>}
-                  {a.items_used && a.items_used.length > 0 && (
-                    <div style={{ fontSize: '0.85rem', marginTop: 2 }}>
-                      <strong>Used:</strong> {a.items_used.map((u) => `${u.item_name} x${u.quantity}`).join(', ')}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>

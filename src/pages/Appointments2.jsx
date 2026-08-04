@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
-import { useAuth } from '../AuthContext';
-import SearchPicker, { makePatientFetcher, makeDoctorFetcher, makeInventoryFetcher } from '../components/SearchPicker';
+import SearchPicker, { makePatientFetcher, makeDoctorFetcher } from '../components/SearchPicker';
 import SlotPicker from '../components/SlotPicker';
 
 const STATUS_BADGE = {
@@ -15,12 +14,8 @@ const STATUS_BADGE = {
 
 const patientFetcher = makePatientFetcher(api);
 const doctorFetcher = makeDoctorFetcher(api);
-const inventoryFetcher = makeInventoryFetcher(api);
 
 export default function Appointments() {
-  const { user } = useAuth();
-  const canChargeCard = user?.role === 'admin' || user?.role === 'receptionist';
-
   const [appointments, setAppointments] = useState([]);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -35,15 +30,6 @@ export default function Appointments() {
   const [completingId, setCompletingId] = useState(null);
   const [diagnosis, setDiagnosis] = useState('');
   const [doctorNotes, setDoctorNotes] = useState('');
-  const [charges, setCharges] = useState([]); // [{description, amount}]
-  const [chargeDesc, setChargeDesc] = useState('');
-  const [chargeAmount, setChargeAmount] = useState('');
-  const [itemsUsed, setItemsUsed] = useState([]); // [{item: {id,label}, quantity}]
-  const [usageItem, setUsageItem] = useState(null);
-  const [usageQty, setUsageQty] = useState('1');
-
-  const [cardChargeId, setCardChargeId] = useState(null);
-  const [cardAmount, setCardAmount] = useState('200');
 
   async function load() {
     setLoading(true);
@@ -100,34 +86,6 @@ export default function Appointments() {
     setCompletingId(id);
     setDiagnosis('');
     setDoctorNotes('');
-    setCharges([]);
-    setChargeDesc('');
-    setChargeAmount('');
-    setItemsUsed([]);
-    setUsageItem(null);
-    setUsageQty('1');
-  }
-
-  function addCharge() {
-    const amount = Number(chargeAmount);
-    if (!chargeDesc.trim() || !amount || amount <= 0) return;
-    setCharges((c) => [...c, { description: chargeDesc.trim(), amount }]);
-    setChargeDesc('');
-    setChargeAmount('');
-  }
-  function removeCharge(idx) {
-    setCharges((c) => c.filter((_, i) => i !== idx));
-  }
-
-  function addItemUsed() {
-    const qty = Number(usageQty);
-    if (!usageItem || !qty || qty <= 0) return;
-    setItemsUsed((items) => [...items, { item: usageItem, quantity: qty }]);
-    setUsageItem(null);
-    setUsageQty('1');
-  }
-  function removeItemUsed(idx) {
-    setItemsUsed((items) => items.filter((_, i) => i !== idx));
   }
 
   async function handleCompleteConsultation(e) {
@@ -137,31 +95,8 @@ export default function Appointments() {
       await api.appointments.addConsultation(completingId, {
         diagnosis,
         doctor_notes: doctorNotes,
-        charges: charges.map((c) => ({ description: c.description, amount: c.amount })),
-        items_used: itemsUsed.map((u) => ({ item_id: u.item.id, quantity: u.quantity })),
       });
       setCompletingId(null);
-      load();
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  async function handleChargeCard(appointmentId, patientId) {
-    setError('');
-    const amount = Number(cardAmount);
-    if (!amount || amount <= 0) {
-      setError('Enter a valid card fee amount.');
-      return;
-    }
-    try {
-      await api.billing.createInvoice({
-        patient_id: patientId,
-        appointment_id: appointmentId,
-        items: [{ description: 'Registration / Card fee', quantity: 1, unit_price: amount }],
-      });
-      setCardChargeId(null);
-      setNotice('Card fee charged — patient can pay at Billing.');
       load();
     } catch (err) {
       setError(err.message);
@@ -235,12 +170,7 @@ export default function Appointments() {
                     <td>{a.patient_name} <span style={{ color: 'var(--muted)' }} className="mono">({a.patient_code})</span></td>
                     <td>{a.doctor_name}</td>
                     <td><span className={`badge ${STATUS_BADGE[a.status]}`}>{a.status.replace('_', ' ')}</span></td>
-                    <td style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                      {canChargeCard && a.status !== 'cancelled' && (
-                        <button className="btn btn-ghost btn-sm" onClick={() => setCardChargeId(cardChargeId === a.id ? null : a.id)}>
-                          Charge card
-                        </button>
-                      )}
+                    <td>
                       {a.status === 'scheduled' && (
                         <button className="btn btn-ghost btn-sm" onClick={() => updateStatus(a.id, 'checked_in')}>Check in</button>
                       )}
@@ -252,28 +182,12 @@ export default function Appointments() {
                       )}
                     </td>
                   </tr>
-
-                  {cardChargeId === a.id && (
-                    <tr>
-                      <td colSpan={6} style={{ background: 'var(--sky-100)' }}>
-                        <div style={{ padding: '14px 4px', display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-                          <div className="field" style={{ maxWidth: 160 }}>
-                            <label>Card fee amount</label>
-                            <input type="number" value={cardAmount} onChange={(e) => setCardAmount(e.target.value)} />
-                          </div>
-                          <button className="btn btn-primary btn-sm" onClick={() => handleChargeCard(a.id, a.patient_id)}>Charge</button>
-                          <button className="btn btn-ghost btn-sm" onClick={() => setCardChargeId(null)}>Cancel</button>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-
                   {completingId === a.id && (
                     <tr>
                       <td colSpan={6} style={{ background: 'var(--sky-100)' }}>
                         <form onSubmit={handleCompleteConsultation} style={{ padding: '14px 4px' }}>
                           <p style={{ fontSize: '0.82rem', color: 'var(--muted)', marginTop: 0, marginBottom: 10 }}>
-                            Add what was done and its charge, and anything used from inventory — both are optional, but this is the only place to bill a procedure or log inventory use for this visit.
+                            Completing this visit will bill the consultation fee to the patient's invoice automatically (if one is set for this doctor).
                           </p>
                           <div className="form-row">
                             <div className="field">
@@ -285,41 +199,6 @@ export default function Appointments() {
                               <input placeholder="e.g. Composite filling placed, patient tolerated well" value={doctorNotes} onChange={(e) => setDoctorNotes(e.target.value)} />
                             </div>
                           </div>
-
-                          <div style={{ marginTop: 14, marginBottom: 14 }}>
-                            <label style={{ fontSize: '0.82rem', fontWeight: 600, display: 'block', marginBottom: 6 }}>Charges</label>
-                            {charges.map((c, idx) => (
-                              <div key={idx} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: '0.85rem', marginBottom: 4 }}>
-                                <span style={{ flex: 1 }}>{c.description}</span>
-                                <span className="mono">{c.amount}</span>
-                                <button type="button" className="btn btn-ghost btn-sm" onClick={() => removeCharge(idx)}>Remove</button>
-                              </div>
-                            ))}
-                            <div style={{ display: 'flex', gap: 10 }}>
-                              <input placeholder="e.g. Tooth extraction" value={chargeDesc} onChange={(e) => setChargeDesc(e.target.value)} style={{ flex: 2 }} />
-                              <input type="number" placeholder="Amount" value={chargeAmount} onChange={(e) => setChargeAmount(e.target.value)} style={{ flex: 1 }} />
-                              <button type="button" className="btn btn-ghost btn-sm" onClick={addCharge}>+ Add charge</button>
-                            </div>
-                          </div>
-
-                          <div style={{ marginBottom: 14 }}>
-                            <label style={{ fontSize: '0.82rem', fontWeight: 600, display: 'block', marginBottom: 6 }}>Items used (from inventory)</label>
-                            {itemsUsed.map((u, idx) => (
-                              <div key={idx} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: '0.85rem', marginBottom: 4 }}>
-                                <span style={{ flex: 1 }}>{u.item.label}</span>
-                                <span className="mono">x{u.quantity}</span>
-                                <button type="button" className="btn btn-ghost btn-sm" onClick={() => removeItemUsed(idx)}>Remove</button>
-                              </div>
-                            ))}
-                            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-                              <div style={{ flex: 2 }}>
-                                <SearchPicker value={usageItem} onSelect={setUsageItem} fetchResults={inventoryFetcher} placeholder="Search medicine or supply…" />
-                              </div>
-                              <input type="number" min="1" value={usageQty} onChange={(e) => setUsageQty(e.target.value)} style={{ flex: 1 }} />
-                              <button type="button" className="btn btn-ghost btn-sm" onClick={addItemUsed}>+ Add item</button>
-                            </div>
-                          </div>
-
                           <div style={{ display: 'flex', gap: 8 }}>
                             <button className="btn btn-primary btn-sm">Save &amp; complete</button>
                             <button type="button" className="btn btn-ghost btn-sm" onClick={() => setCompletingId(null)}>Cancel</button>

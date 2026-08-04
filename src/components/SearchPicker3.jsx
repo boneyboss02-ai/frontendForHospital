@@ -140,10 +140,3 @@ export function makeMedicineFetcher(api) {
     return items.map((m) => ({ id: m.id, label: m.name, sublabel: `${m.stock_quantity} ${m.unit} in stock` }));
   };
 }
-
-export function makeInventoryFetcher(api) {
-  return async (query) => {
-    const { items } = await api.inventory.items({ search: query });
-    return items.map((m) => ({ id: m.id, label: m.name, sublabel: `${m.stock_quantity} ${m.unit} in stock · ${m.category}` }));
-  };
-}

@@ -56,7 +56,7 @@ export default function PrintPatientReport() {
         <h3>Visit history</h3>
         {appointments.length === 0 ? <p style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>No visits on record.</p> : (
           <table className="print-table">
-            <thead><tr><th>Date</th><th>Doctor</th><th>Diagnosis</th><th>Treatment notes</th><th>Used</th></tr></thead>
+            <thead><tr><th>Date</th><th>Doctor</th><th>Diagnosis</th><th>Treatment notes</th></tr></thead>
             <tbody>
               {appointments.filter((a) => a.status === 'completed').map((a) => (
                 <tr key={a.id}>
@@ -64,7 +64,6 @@ export default function PrintPatientReport() {
                   <td>{a.doctor_name || '—'}</td>
                   <td>{a.diagnosis || '—'}</td>
                   <td>{a.doctor_notes || '—'}</td>
-                  <td>{a.items_used && a.items_used.length > 0 ? a.items_used.map((u) => `${u.item_name} x${u.quantity}`).join(', ') : '—'}</td>
                 </tr>
               ))}
             </tbody>
