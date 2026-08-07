@@ -12,8 +12,6 @@ const medicineFetcher = makeMedicineFetcher(api);
 export default function Prescriptions() {
   const { user } = useAuth();
   const [prescriptions, setPrescriptions] = useState([]);
-  const [dateFilter, setDateFilter] = useState('');
-  const [patientFilter, setPatientFilter] = useState(null);
   const [openPrescription, setOpenPrescription] = useState(null); // { prescription, items }
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -29,10 +27,7 @@ export default function Prescriptions() {
     setLoading(true);
     setError('');
     try {
-      const params = {};
-      if (dateFilter) params.date = dateFilter;
-      if (patientFilter) params.patient_id = patientFilter.id;
-      const rxRes = await api.prescriptions.list(params);
+      const rxRes = await api.prescriptions.list();
       setPrescriptions(rxRes.prescriptions);
     } catch (err) {
       setError(err.message);
@@ -41,7 +36,7 @@ export default function Prescriptions() {
     }
   }
 
-  useEffect(() => { load(); }, [dateFilter, patientFilter]);
+  useEffect(() => { load(); }, []);
 
   async function openRx(id) {
     setError('');
@@ -130,23 +125,7 @@ export default function Prescriptions() {
       ) : (
         <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
           <div className="card" style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14, gap: 12, flexWrap: 'wrap' }}>
-              <h3 style={{ marginBottom: 0 }}>All prescriptions</h3>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-                <div className="field" style={{ marginBottom: 0, maxWidth: 150 }}>
-                  <label>Date</label>
-                  <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
-                </div>
-                <div style={{ minWidth: 190 }}>
-                  <SearchPicker label="Patient" value={patientFilter} onSelect={setPatientFilter} fetchResults={patientFetcher} placeholder="Any patient…" />
-                </div>
-                {(dateFilter || patientFilter) && (
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setDateFilter(''); setPatientFilter(null); }}>
-                    Reset
-                  </button>
-                )}
-              </div>
-            </div>
+            <h3 style={{ marginBottom: 14 }}>All prescriptions</h3>
             {prescriptions.length === 0 ? (
               <p style={{ color: 'var(--muted)' }}>No prescriptions yet.</p>
             ) : (

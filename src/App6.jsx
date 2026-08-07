@@ -18,7 +18,6 @@ import Appointments from './pages/Appointments';
 import Beds from './pages/Beds';
 import Lab from './pages/Lab';
 import Inventory from './pages/Inventory';
-import Treatments from './pages/Treatments';
 import Prescriptions from './pages/Prescriptions';
 import Billing from './pages/Billing';
 import Reports from './pages/Reports';
@@ -29,7 +28,6 @@ import PrintInvoice from './pages/PrintInvoice';
 import PrintPrescription from './pages/PrintPrescription';
 import PrintPatientReport from './pages/PrintPatientReport';
 import Messages from './pages/Messages';
-import StaffMessages from './pages/StaffMessages';
 
 import PortalDashboard from './pages/portal/PortalDashboard';
 import PortalAppointments from './pages/portal/PortalAppointments';
@@ -72,38 +70,9 @@ export default function App() {
             <Route path="patients" element={<Patients />} />
             <Route path="patients/:id" element={<PatientDetail />} />
             <Route path="appointments" element={<Appointments />} />
-            <Route
-              path="beds"
-              element={
-                <ProtectedRoute roles={['nurse', 'receptionist']}>
-                  <Beds />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="treatments"
-              element={
-                <ProtectedRoute roles={['admin']}>
-                  <Treatments />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="lab"
-              element={
-                <ProtectedRoute roles={['doctor', 'nurse']}>
-                  <Lab />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="prescriptions"
-              element={
-                <ProtectedRoute roles={['doctor', 'nurse']}>
-                  <Prescriptions />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="beds" element={<Beds />} />
+            <Route path="lab" element={<Lab />} />
+            <Route path="prescriptions" element={<Prescriptions />} />
             <Route
               path="inventory"
               element={
@@ -146,7 +115,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="team-chat" element={<StaffMessages />} />
           </Route>
 
           {/* Print-friendly pages — deliberately outside Shell/PortalShell so

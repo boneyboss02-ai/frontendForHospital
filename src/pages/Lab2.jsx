@@ -11,8 +11,6 @@ export default function Lab() {
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [statusFilter, setStatusFilter] = useState('pending');
-  const [dateFilter, setDateFilter] = useState('');
-  const [patientFilter, setPatientFilter] = useState(null);
   const [selected, setSelected] = useState(null); // { order, results }
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -31,11 +29,7 @@ export default function Lab() {
     setLoading(true);
     setError('');
     try {
-      const params = {};
-      if (statusFilter) params.status = statusFilter;
-      if (dateFilter) params.date = dateFilter;
-      if (patientFilter) params.patient_id = patientFilter.id;
-      const { orders } = await api.lab.orders(params);
+      const { orders } = await api.lab.orders(statusFilter ? { status: statusFilter } : {});
       setOrders(orders);
     } catch (err) {
       setError(err.message);
@@ -44,7 +38,7 @@ export default function Lab() {
     }
   }
 
-  useEffect(() => { load(); }, [statusFilter, dateFilter, patientFilter]);
+  useEffect(() => { load(); }, [statusFilter]);
 
   async function openOrder(id) {
     setError('');
@@ -128,27 +122,13 @@ export default function Lab() {
 
       <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
         <div className="card" style={{ flex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14, gap: 12, flexWrap: 'wrap' }}>
-            <h3 style={{ marginBottom: 0 }}>Orders</h3>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-              <div className="field" style={{ marginBottom: 0, maxWidth: 150 }}>
-                <label>Date</label>
-                <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
-              </div>
-              <div style={{ minWidth: 190 }}>
-                <SearchPicker label="Patient" value={patientFilter} onSelect={setPatientFilter} fetchResults={patientFetcher} placeholder="Any patient…" />
-              </div>
-              <select style={{ width: 150 }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                <option value="">All statuses</option>
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-              </select>
-              {(dateFilter || patientFilter || statusFilter) && (
-                <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setDateFilter(''); setPatientFilter(null); setStatusFilter(''); }}>
-                  Reset
-                </button>
-              )}
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <h3>Orders</h3>
+            <select style={{ width: 160 }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <option value="">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+            </select>
           </div>
 
           {loading ? (

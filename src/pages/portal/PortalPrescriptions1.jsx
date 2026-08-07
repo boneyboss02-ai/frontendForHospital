@@ -86,6 +86,9 @@ export default function PortalPrescriptions() {
                 <div style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>
                   {item.dosage} · {item.frequency} · {item.duration_days} days
                 </div>
+                <span className={`badge ${item.dispensed ? 'ok' : 'wait'}`} style={{ marginTop: 6, display: 'inline-block' }}>
+                  {item.dispensed ? 'Dispensed' : 'Not yet dispensed'}
+                </span>
               </div>
             ))}
           </div>

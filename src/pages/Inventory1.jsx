@@ -7,7 +7,7 @@ import { useAuth } from '../AuthContext';
 // internal stock tracking; not connected to billing or prescriptions.
 export default function Inventory() {
   const { user } = useAuth();
-  const canManage = user?.role === 'admin';
+  const canManage = user?.role === 'admin' || user?.role === 'nurse';
   const [tab, setTab] = useState('all'); // 'all' | 'medicine' | 'supply'
   const [items, setItems] = useState([]);
   const [error, setError] = useState('');

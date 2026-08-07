@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 import SearchPicker, { makePatientFetcher } from '../components/SearchPicker';
 
@@ -8,93 +7,26 @@ const STATUS_BADGE = { unpaid: 'busy', partially_paid: 'wait', paid: 'ok', cance
 const patientFetcher = makePatientFetcher(api);
 
 export default function Billing() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [invoices, setInvoices] = useState([]);
   const [statusFilter, setStatusFilter] = useState('');
-  const [fromFilter, setFromFilter] = useState('');
-  const [toFilter, setToFilter] = useState('');
-  const [patientFilter, setPatientFilter] = useState(null);
-  const [overdueOnly, setOverdueOnly] = useState(searchParams.get('overdue') === 'true');
   const [selected, setSelected] = useState(null); // { invoice, items, payments }
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // A standing reminder of who owes past-due money — independent of
-  // whatever the table below is currently filtered to, so reception always
-  // sees it without having to remember to check.
-  const [overdueList, setOverdueList] = useState([]);
-
   const [showInvoiceForm, setShowInvoiceForm] = useState(false);
   const [invoicePatient, setInvoicePatient] = useState(null);
-  const [invoiceForm, setInvoiceForm] = useState({ description: '', quantity: '1', unit_price: '', due_date: '' });
+  const [invoiceForm, setInvoiceForm] = useState({ description: '', quantity: '1', unit_price: '' });
 
   const [showItemForm, setShowItemForm] = useState(false);
   const [itemForm, setItemForm] = useState({ description: '', quantity: '1', unit_price: '' });
 
   const [paymentForm, setPaymentForm] = useState({ amount: '', method: 'cash' });
-  const [dueDateDraft, setDueDateDraft] = useState('');
-
-  const [proofs, setProofs] = useState([]);
-  const [proofsLoading, setProofsLoading] = useState(true);
-  const [proofImages, setProofImages] = useState({}); // { [proofId]: blobUrl }
-
-  async function loadProofs() {
-    setProofsLoading(true);
-    try {
-      const { proofs } = await api.payments.proofs({ status: 'pending' });
-      setProofs(proofs);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setProofsLoading(false);
-    }
-  }
-
-  useEffect(() => { loadProofs(); }, []);
-
-  async function viewProofImage(id) {
-    if (proofImages[id]) return;
-    try {
-      const url = await api.payments.openProofImage(id);
-      setProofImages((imgs) => ({ ...imgs, [id]: url }));
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  async function handleApproveProof(id) {
-    setError('');
-    try {
-      await api.payments.approveProof(id);
-      loadProofs();
-      load();
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  async function handleRejectProof(id) {
-    const note = window.prompt('Reason for rejecting (optional):') || '';
-    setError('');
-    try {
-      await api.payments.rejectProof(id, note);
-      loadProofs();
-    } catch (err) {
-      setError(err.message);
-    }
-  }
 
   async function load() {
     setLoading(true);
     setError('');
     try {
-      const params = {};
-      if (statusFilter) params.status = statusFilter;
-      if (fromFilter) params.from = fromFilter;
-      if (toFilter) params.to = toFilter;
-      if (patientFilter) params.patient_id = patientFilter.id;
-      if (overdueOnly) params.overdue = 'true';
-      const { invoices } = await api.billing.invoices(params);
+      const { invoices } = await api.billing.invoices(statusFilter ? { status: statusFilter } : {});
       setInvoices(invoices);
     } catch (err) {
       setError(err.message);
@@ -103,32 +35,13 @@ export default function Billing() {
     }
   }
 
-  async function loadOverdue() {
-    try {
-      const { invoices } = await api.billing.invoices({ overdue: 'true' });
-      setOverdueList(invoices);
-    } catch {
-      // Non-critical — the reminder card just stays empty if this fails;
-      // the main table above still has its own error handling.
-    }
-  }
-
-  useEffect(() => { load(); }, [statusFilter, fromFilter, toFilter, patientFilter, overdueOnly]);
-  useEffect(() => { loadOverdue(); }, []);
-
-  function toggleOverdueOnly(next) {
-    setOverdueOnly(next);
-    const params = new URLSearchParams(searchParams);
-    if (next) params.set('overdue', 'true'); else params.delete('overdue');
-    setSearchParams(params, { replace: true });
-  }
+  useEffect(() => { load(); }, [statusFilter]);
 
   async function openInvoice(id) {
     setError('');
     try {
       const data = await api.billing.getInvoice(id);
       setSelected(data);
-      setDueDateDraft(data.invoice.due_date ? data.invoice.due_date.slice(0, 10) : '');
     } catch (err) {
       setError(err.message);
     }
@@ -149,12 +62,11 @@ export default function Billing() {
       const items = invoiceForm.description
         ? [{ description: invoiceForm.description, quantity: Number(invoiceForm.quantity) || 1, unit_price: Number(invoiceForm.unit_price) }]
         : [];
-      await api.billing.createInvoice({ patient_id: invoicePatient.id, items, due_date: invoiceForm.due_date || undefined });
+      await api.billing.createInvoice({ patient_id: invoicePatient.id, items });
       setInvoicePatient(null);
-      setInvoiceForm({ description: '', quantity: '1', unit_price: '', due_date: '' });
+      setInvoiceForm({ description: '', quantity: '1', unit_price: '' });
       setShowInvoiceForm(false);
       load();
-      loadOverdue();
     } catch (err) {
       setError(err.message);
     }
@@ -189,20 +101,6 @@ export default function Billing() {
       setPaymentForm({ amount: '', method: 'cash' });
       refreshSelected();
       load();
-      loadOverdue();
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  async function handleSetDueDate(e) {
-    e.preventDefault();
-    setError('');
-    try {
-      await api.billing.updateDueDate(selected.invoice.id, dueDateDraft || null);
-      refreshSelected();
-      load();
-      loadOverdue();
     } catch (err) {
       setError(err.message);
     }
@@ -221,35 +119,6 @@ export default function Billing() {
       </div>
 
       {error && <div className="error-banner">{error}</div>}
-
-      {!proofsLoading && proofs.length > 0 && (
-        <div className="card" style={{ marginBottom: 24, borderColor: 'var(--amber)' }}>
-          <h3 style={{ marginBottom: 4 }}>Payment proofs awaiting review ({proofs.length})</h3>
-          <p style={{ fontSize: '0.82rem', color: 'var(--muted)', marginTop: 0, marginBottom: 14 }}>
-            Submitted by patients when a Chapa checkout was interrupted — confirm the transaction actually happened before approving.
-          </p>
-          {proofs.map((p) => (
-            <div key={p.id} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: '12px 0', borderBottom: '1px solid var(--line)' }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{p.patient_name} <span className="mono" style={{ color: 'var(--muted)', fontWeight: 400 }}>({p.patient_code})</span></div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginTop: 2 }}>
-                  Invoice balance: {(Number(p.total_amount) - Number(p.amount_paid)).toFixed(2)} · Submitted {new Date(p.submitted_at).toLocaleString()}
-                </div>
-                <div className="mono" style={{ fontSize: '0.85rem', marginTop: 4 }}>Transaction: {p.transaction_ref}</div>
-                {proofImages[p.id] ? (
-                  <img src={proofImages[p.id]} alt="Payment proof" style={{ maxWidth: 220, marginTop: 8, borderRadius: 'var(--radius-sm)', border: '1px solid var(--line)' }} />
-                ) : (
-                  <button className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() => viewProofImage(p.id)}>View screenshot</button>
-                )}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <button className="btn btn-primary btn-sm" onClick={() => handleApproveProof(p.id)}>Approve</button>
-                <button className="btn btn-ghost btn-sm" onClick={() => handleRejectProof(p.id)}>Reject</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {showInvoiceForm && (
         <div className="card" style={{ marginBottom: 24 }}>
@@ -273,35 +142,8 @@ export default function Billing() {
                 <input type="number" step="0.01" value={invoiceForm.unit_price} onChange={(e) => setInvoiceForm({ ...invoiceForm, unit_price: e.target.value })} />
               </div>
             </div>
-            <div className="field" style={{ maxWidth: 200 }}>
-              <label>Payment due by (optional)</label>
-              <input type="date" value={invoiceForm.due_date} onChange={(e) => setInvoiceForm({ ...invoiceForm, due_date: e.target.value })} />
-            </div>
             <button className="btn btn-primary">Create invoice</button>
           </form>
-        </div>
-      )}
-
-      {overdueList.length > 0 && (
-        <div className="card" style={{ marginBottom: 24, borderColor: 'var(--red)' }}>
-          <h3 style={{ marginBottom: 10, color: 'var(--red)' }}>
-            {overdueList.length} patient{overdueList.length > 1 ? 's' : ''} past their payment deadline
-          </h3>
-          <table>
-            <thead>
-              <tr><th>Patient</th><th>Balance</th><th>Was due</th><th></th></tr>
-            </thead>
-            <tbody>
-              {overdueList.map((inv) => (
-                <tr key={inv.id}>
-                  <td>{inv.patient_name} <span className="mono" style={{ color: 'var(--muted)' }}>({inv.patient_code})</span></td>
-                  <td className="mono">{(Number(inv.total_amount) - Number(inv.amount_paid)).toFixed(2)}</td>
-                  <td>{new Date(inv.due_date).toLocaleDateString()}</td>
-                  <td><button className="btn btn-ghost btn-sm" onClick={() => openInvoice(inv.id)}>Open</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       )}
 
@@ -309,43 +151,13 @@ export default function Billing() {
         <div className="card" style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <h3>All invoices</h3>
-          </div>
-
-          <div className="form-row" style={{ alignItems: 'flex-end', marginBottom: 14 }}>
-            <div className="field" style={{ maxWidth: 150 }}>
-              <label>From</label>
-              <input type="date" value={fromFilter} onChange={(e) => setFromFilter(e.target.value)} />
-            </div>
-            <div className="field" style={{ maxWidth: 150 }}>
-              <label>To</label>
-              <input type="date" value={toFilter} onChange={(e) => setToFilter(e.target.value)} />
-            </div>
-            <div style={{ flex: 1, minWidth: 180 }}>
-              <SearchPicker label="Patient" value={patientFilter} onSelect={setPatientFilter} fetchResults={patientFetcher} placeholder="Any patient…" />
-            </div>
-            <div className="field" style={{ maxWidth: 160 }}>
-              <label>Status</label>
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                <option value="">All statuses</option>
-                <option value="unpaid">Unpaid</option>
-                <option value="partially_paid">Partially paid</option>
-                <option value="paid">Paid</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', paddingBottom: 10, whiteSpace: 'nowrap' }}>
-              <input type="checkbox" checked={overdueOnly} onChange={(e) => toggleOverdueOnly(e.target.checked)} />
-              Overdue only
-            </label>
-            {(fromFilter || toFilter || patientFilter || statusFilter || overdueOnly) && (
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm"
-                onClick={() => { setFromFilter(''); setToFilter(''); setPatientFilter(null); setStatusFilter(''); toggleOverdueOnly(false); }}
-              >
-                Reset filters
-              </button>
-            )}
+            <select style={{ width: 160 }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <option value="">All statuses</option>
+              <option value="unpaid">Unpaid</option>
+              <option value="partially_paid">Partially paid</option>
+              <option value="paid">Paid</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
           </div>
 
           {loading ? (
@@ -363,10 +175,7 @@ export default function Billing() {
                     <td>{inv.patient_name} <span className="mono" style={{ color: 'var(--muted)' }}>({inv.patient_code})</span></td>
                     <td className="mono">{Number(inv.total_amount).toFixed(2)}</td>
                     <td className="mono">{Number(inv.amount_paid).toFixed(2)}</td>
-                    <td>
-                      <span className={`badge ${STATUS_BADGE[inv.status]}`}>{inv.status.replace('_', ' ')}</span>
-                      {inv.is_overdue && <span className="badge busy" style={{ marginLeft: 6 }}>overdue</span>}
-                    </td>
+                    <td><span className={`badge ${STATUS_BADGE[inv.status]}`}>{inv.status.replace('_', ' ')}</span></td>
                     <td><button className="btn btn-ghost btn-sm" onClick={() => openInvoice(inv.id)}>Open</button></td>
                   </tr>
                 ))}
@@ -382,10 +191,7 @@ export default function Billing() {
                 <h3 style={{ marginBottom: 2 }}>{selected.invoice.patient_name}</h3>
                 <p className="mono" style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>{selected.invoice.patient_code}</p>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <span className={`badge ${STATUS_BADGE[selected.invoice.status]}`}>{selected.invoice.status.replace('_', ' ')}</span>
-                {selected.invoice.is_overdue && <div><span className="badge busy" style={{ marginTop: 4, display: 'inline-block' }}>overdue</span></div>}
-              </div>
+              <span className={`badge ${STATUS_BADGE[selected.invoice.status]}`}>{selected.invoice.status.replace('_', ' ')}</span>
             </div>
 
             <button
@@ -395,19 +201,6 @@ export default function Billing() {
             >
               Print / Save as PDF
             </button>
-
-            <form onSubmit={handleSetDueDate} style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginTop: 14 }}>
-              <div className="field" style={{ marginBottom: 0, flex: 1 }}>
-                <label>Payment due by</label>
-                <input type="date" value={dueDateDraft} onChange={(e) => setDueDateDraft(e.target.value)} />
-              </div>
-              <button className="btn btn-ghost btn-sm">Save</button>
-            </form>
-            <p style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: 4 }}>
-              {selected.invoice.due_date
-                ? `Currently due ${new Date(selected.invoice.due_date).toLocaleDateString()}. Clear the date and save to remove the deadline.`
-                : 'No deadline set — this invoice will never show as overdue.'}
-            </p>
 
             <div style={{ margin: '14px 0' }}>
               {selected.items.length === 0 ? (

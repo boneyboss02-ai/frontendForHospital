@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
-import { useAuth } from '../AuthContext';
-import SearchPicker, { makeDoctorFetcher, makePatientFetcher } from '../components/SearchPicker';
-
-const doctorFetcher = makeDoctorFetcher(api);
-const patientFetcher = makePatientFetcher(api);
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -31,22 +26,11 @@ function BarRow({ label, value, max, formatValue }) {
 }
 
 export default function Reports() {
-  const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
-
   const [from, setFrom] = useState(daysAgoISO(30));
   const [to, setTo] = useState(todayISO());
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-
-  // Per-visit profit breakdown — admin only (it exposes supply cost and
-  // margin, not just top-line revenue). Its own patient/doctor filters,
-  // separate from the date range above which drives the rest of the page.
-  const [profitData, setProfitData] = useState(null);
-  const [profitDoctor, setProfitDoctor] = useState(null);
-  const [profitPatient, setProfitPatient] = useState(null);
-  const [profitLoading, setProfitLoading] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -61,24 +45,7 @@ export default function Reports() {
     }
   }
 
-  async function loadProfitability() {
-    if (!isAdmin) return;
-    setProfitLoading(true);
-    try {
-      const params = { from, to };
-      if (profitDoctor) params.doctor_id = profitDoctor.id;
-      if (profitPatient) params.patient_id = profitPatient.id;
-      const result = await api.reports.profitability(params);
-      setProfitData(result);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setProfitLoading(false);
-    }
-  }
-
-  useEffect(() => { load(); loadProfitability(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { loadProfitability(); }, [profitDoctor, profitPatient]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div>
@@ -99,7 +66,7 @@ export default function Reports() {
             <label>To</label>
             <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
-          <button className="btn btn-primary" style={{ height: 38 }} onClick={() => { load(); loadProfitability(); }}>Apply</button>
+          <button className="btn btn-primary" style={{ height: 38 }} onClick={load}>Apply</button>
         </div>
       </div>
 
@@ -216,78 +183,6 @@ export default function Reports() {
               </div>
             )}
           </div>
-
-          {isAdmin && (
-            <div className="card" style={{ marginTop: 20 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14, gap: 12, flexWrap: 'wrap' }}>
-                <div>
-                  <h3 style={{ marginBottom: 2 }}>Profit by visit</h3>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
-                    Revenue billed minus the cost of inventory used in that visit — e.g. a 1500 procedure
-                    that used 300 worth of supplies shows as 1200 profit. Uses today's item prices, so
-                    figures can shift slightly if a supply cost changes later.
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-                  <div style={{ minWidth: 180 }}>
-                    <SearchPicker label="Doctor" value={profitDoctor} onSelect={setProfitDoctor} fetchResults={doctorFetcher} placeholder="Any doctor…" />
-                  </div>
-                  <div style={{ minWidth: 180 }}>
-                    <SearchPicker label="Patient" value={profitPatient} onSelect={setProfitPatient} fetchResults={patientFetcher} placeholder="Any patient…" />
-                  </div>
-                </div>
-              </div>
-
-              {profitLoading ? (
-                <p style={{ color: 'var(--muted)' }}>Loading…</p>
-              ) : profitData && (
-                <>
-                  <div className="stat-grid" style={{ marginBottom: 18 }}>
-                    <div className="stat-card">
-                      <div className="value">{profitData.summary.gross_revenue.toFixed(2)}</div>
-                      <div className="label">Revenue (procedures)</div>
-                    </div>
-                    <div className="stat-card">
-                      <div className="value">{profitData.summary.cost_of_supplies.toFixed(2)}</div>
-                      <div className="label">Cost of supplies used</div>
-                    </div>
-                    <div className="stat-card">
-                      <div className="value">{profitData.summary.gross_profit.toFixed(2)}</div>
-                      <div className="label">Gross profit</div>
-                    </div>
-                    <div className="stat-card">
-                      <div className="value" style={{ color: profitData.summary.net_profit >= 0 ? 'inherit' : 'var(--red)' }}>
-                        {profitData.summary.net_profit.toFixed(2)}
-                      </div>
-                      <div className="label">Net profit (after expenses)</div>
-                    </div>
-                  </div>
-
-                  {profitData.visits.length === 0 ? (
-                    <p style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>No completed visits with billing in this range.</p>
-                  ) : (
-                    <table>
-                      <thead>
-                        <tr><th>Date</th><th>Patient</th><th>Doctor</th><th>Revenue</th><th>Supply cost</th><th>Profit</th></tr>
-                      </thead>
-                      <tbody>
-                        {profitData.visits.map((v) => (
-                          <tr key={v.appointment_id}>
-                            <td>{new Date(v.scheduled_at).toLocaleDateString()}</td>
-                            <td>{v.patient_name}</td>
-                            <td>{v.doctor_name}</td>
-                            <td className="mono">{v.revenue.toFixed(2)}</td>
-                            <td className="mono">{v.cost.toFixed(2)}</td>
-                            <td className="mono" style={{ color: v.profit >= 0 ? 'inherit' : 'var(--red)' }}>{v.profit.toFixed(2)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </>
-              )}
-            </div>
-          )}
         </>
       )}
     </div>

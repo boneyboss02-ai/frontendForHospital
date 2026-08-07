@@ -7,18 +7,16 @@ const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', end: true, roles: ['admin', 'receptionist'] },
   { to: '/patients', label: 'Patients' },
   { to: '/appointments', label: 'Appointments' },
-  { to: '/beds', label: 'Chairs & Rooms', roles: ['nurse', 'receptionist'] },
-  { to: '/lab', label: 'Lab', roles: ['doctor', 'nurse'] },
-  { to: '/prescriptions', label: 'Prescriptions', roles: ['doctor', 'nurse'] },
+  { to: '/beds', label: 'Chairs & Rooms' },
+  { to: '/lab', label: 'Lab' },
+  { to: '/prescriptions', label: 'Prescriptions' },
   { to: '/inventory', label: 'Inventory', roles: ['admin', 'nurse'] },
-  { to: '/treatments', label: 'Treatments', roles: ['admin'] },
   { to: '/billing', label: 'Billing' },
   { to: '/reports', label: 'Reports', roles: ['admin', 'receptionist'] },
   { to: '/expenses', label: 'Expenses', roles: ['admin'] },
   { to: '/availability', label: 'My Schedule', roles: ['admin', 'doctor'] },
   { to: '/schedule', label: "Who's on Duty" },
   { to: '/messages', label: 'Messages', roles: ['doctor'] },
-  { to: '/team-chat', label: 'Team Chat' },
 ];
 
 export default function Shell() {

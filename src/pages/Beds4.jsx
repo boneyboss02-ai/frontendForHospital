@@ -1,19 +1,14 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { useAuth } from '../AuthContext';
-import SearchPicker, { makePatientFetcher } from '../components/SearchPicker';
+import SearchPicker, { makePatientFetcher, makeDoctorFetcher } from '../components/SearchPicker';
 
 const patientFetcher = makePatientFetcher(api);
+const doctorFetcher = makeDoctorFetcher(api);
 
-// Despite the "Chairs & Rooms" hospital-y naming under the hood (wards/beds/
-// admissions in the database), this is really just a waiting-area board:
-// which chair is a checked-in patient sitting in until it's their turn.
-// No doctor, no reason, no discharge summary — those live on the
-// appointment itself. Seating/freeing a chair is open to admin, nurse, and
-// receptionist, since reception is who actually runs the waiting area.
 export default function Beds() {
   const { user } = useAuth();
-  const canManageBeds = user?.role === 'admin' || user?.role === 'nurse' || user?.role === 'receptionist';
+  const canManageBeds = user?.role === 'admin' || user?.role === 'nurse';
   const isAdmin = user?.role === 'admin';
   const [beds, setBeds] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -21,9 +16,11 @@ export default function Beds() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const [showSeatForm, setShowSeatForm] = useState(false);
-  const [seatPatient, setSeatPatient] = useState(null);
-  const [seatBedId, setSeatBedId] = useState('');
+  const [showAdmitForm, setShowAdmitForm] = useState(false);
+  const [admitPatient, setAdmitPatient] = useState(null);
+  const [admitDoctor, setAdmitDoctor] = useState(null);
+  const [admitBedId, setAdmitBedId] = useState('');
+  const [admitReason, setAdmitReason] = useState('');
 
   const [showManageForm, setShowManageForm] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
@@ -51,10 +48,10 @@ export default function Beds() {
 
   useEffect(() => { load(); }, []);
 
-  async function handleFreeChair(admissionId) {
-    if (!window.confirm('Free this chair? The patient has moved on.')) return;
+  async function handleDischarge(admissionId) {
+    const summary = window.prompt('Visit summary (optional):') || '';
     try {
-      await api.inpatient.discharge(admissionId);
+      await api.inpatient.discharge(admissionId, summary);
       load();
     } catch (err) {
       setError(err.message);
@@ -72,21 +69,25 @@ export default function Beds() {
     }
   }
 
-  async function handleSeat(e) {
+  async function handleAdmit(e) {
     e.preventDefault();
     setError('');
-    if (!seatPatient || !seatBedId) {
+    if (!admitPatient || !admitBedId) {
       setError('Please select a patient and a chair.');
       return;
     }
     try {
       await api.inpatient.admit({
-        patient_id: seatPatient.id,
-        bed_id: Number(seatBedId),
+        patient_id: admitPatient.id,
+        bed_id: Number(admitBedId),
+        attending_doctor_id: admitDoctor ? admitDoctor.id : undefined,
+        admission_reason: admitReason,
       });
-      setSeatPatient(null);
-      setSeatBedId('');
-      setShowSeatForm(false);
+      setAdmitPatient(null);
+      setAdmitDoctor(null);
+      setAdmitBedId('');
+      setAdmitReason('');
+      setShowAdmitForm(false);
       load();
     } catch (err) {
       setError(err.message);
@@ -138,7 +139,7 @@ export default function Beds() {
     <div>
       <div className="page-header">
         <div>
-          <div className="eyebrow">Waiting area</div>
+          <div className="eyebrow">Treatment rooms</div>
           <h1>Chairs &amp; Rooms</h1>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -147,19 +148,11 @@ export default function Beds() {
               {showManageForm ? 'Cancel' : '+ Add room / chair'}
             </button>
           )}
-          {canManageBeds && (
-            <button className="btn btn-primary" onClick={() => setShowSeatForm((s) => !s)}>
-              {showSeatForm ? 'Cancel' : '+ Seat patient'}
-            </button>
-          )}
+          <button className="btn btn-primary" onClick={() => setShowAdmitForm((s) => !s)}>
+            {showAdmitForm ? 'Cancel' : '+ Seat patient'}
+          </button>
         </div>
       </div>
-
-      <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginTop: -14, marginBottom: 20 }}>
-        A chair is just a place a checked-in patient sits until it's their turn — seat them here while
-        they wait, then free the chair once they move on. No treatment details needed; that all lives
-        on the appointment itself.
-      </p>
 
       {error && <div className="error-banner">{error}</div>}
 
@@ -203,15 +196,18 @@ export default function Beds() {
         </div>
       )}
 
-      {canManageBeds && showSeatForm && (
+      {showAdmitForm && (
         <div className="card" style={{ marginBottom: 24 }}>
           <h3 style={{ marginBottom: 16 }}>Seat patient</h3>
-          <form onSubmit={handleSeat}>
+          <form onSubmit={handleAdmit}>
             <div className="form-row">
-              <SearchPicker label="Patient" required value={seatPatient} onSelect={setSeatPatient} fetchResults={patientFetcher} placeholder="Search patient by name or code…" />
+              <SearchPicker label="Patient" required value={admitPatient} onSelect={setAdmitPatient} fetchResults={patientFetcher} placeholder="Search patient by name or code…" />
+              <SearchPicker label="Attending doctor" value={admitDoctor} onSelect={setAdmitDoctor} fetchResults={doctorFetcher} placeholder="Search doctor by name…" />
+            </div>
+            <div className="form-row">
               <div className="field">
                 <label>Chair *</label>
-                <select required value={seatBedId} onChange={(e) => setSeatBedId(e.target.value)}>
+                <select required value={admitBedId} onChange={(e) => setAdmitBedId(e.target.value)}>
                   <option value="">Select an available chair</option>
                   {availableBeds.map((b) => (
                     <option key={b.id} value={b.id}>{b.ward_name} — {b.bed_number}</option>
@@ -220,6 +216,10 @@ export default function Beds() {
                 {availableBeds.length === 0 && (
                   <p style={{ fontSize: '0.78rem', color: 'var(--red)', marginTop: 4 }}>No chairs currently available.</p>
                 )}
+              </div>
+              <div className="field">
+                <label>Reason for visit</label>
+                <input value={admitReason} onChange={(e) => setAdmitReason(e.target.value)} />
               </div>
             </div>
             <button className="btn btn-primary">Seat patient</button>
@@ -274,16 +274,17 @@ export default function Beds() {
           </div>
 
           <div className="card">
-            <h3 style={{ marginBottom: 14 }}>Currently seated</h3>
+            <h3 style={{ marginBottom: 14 }}>Currently in treatment</h3>
             {admissions.length === 0 ? (
-              <p style={{ color: 'var(--muted)' }}>No patients currently seated.</p>
+              <p style={{ color: 'var(--muted)' }}>No patients currently in treatment.</p>
             ) : (
               <table>
                 <thead>
                   <tr>
                     <th>Patient</th>
                     <th>Room / Chair</th>
-                    <th>Seated since</th>
+                    <th>Doctor</th>
+                    <th>Admitted</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -292,11 +293,10 @@ export default function Beds() {
                     <tr key={a.id}>
                       <td>{a.patient_name} <span className="mono" style={{ color: 'var(--muted)' }}>({a.patient_code})</span></td>
                       <td>{a.ward_name} / {a.bed_number}</td>
-                      <td>{new Date(a.admitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                      <td>{a.doctor_name || '—'}</td>
+                      <td>{new Date(a.admitted_at).toLocaleDateString()}</td>
                       <td>
-                        {canManageBeds && (
-                          <button className="btn btn-ghost btn-sm" onClick={() => handleFreeChair(a.id)}>Free chair</button>
-                        )}
+                        <button className="btn btn-ghost btn-sm" onClick={() => handleDischarge(a.id)}>Finish visit</button>
                       </td>
                     </tr>
                   ))}

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
-import { useAuth } from '../AuthContext';
 
 const EMPTY_FORM = {
   full_name: '', date_of_birth: '', gender: '', phone: '', address: '',
@@ -10,9 +9,6 @@ const EMPTY_FORM = {
 
 export default function Patients() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const canManage = user?.role === 'admin' || user?.role === 'receptionist';
-  const isDoctor = user?.role === 'doctor';
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -79,14 +75,12 @@ export default function Patients() {
     <div>
       <div className="page-header">
         <div>
-          <div className="eyebrow">{isDoctor ? 'Your patients' : 'Records'}</div>
+          <div className="eyebrow">Records</div>
           <h1>Patients</h1>
         </div>
-        {canManage && (
-          <button className="btn btn-primary" onClick={() => setShowForm((s) => !s)}>
-            {showForm ? 'Cancel' : '+ Register patient'}
-          </button>
-        )}
+        <button className="btn btn-primary" onClick={() => setShowForm((s) => !s)}>
+          {showForm ? 'Cancel' : '+ Register patient'}
+        </button>
       </div>
 
       {error && <div className="error-banner">{error}</div>}
@@ -188,8 +182,6 @@ export default function Patients() {
                     <td>
                       {p.user_id ? (
                         <span className="badge ok">Active</span>
-                      ) : !canManage ? (
-                        <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>—</span>
                       ) : invitingId === p.id ? (
                         <button className="btn btn-ghost btn-sm" onClick={() => setInvitingId(null)}>Cancel</button>
                       ) : (

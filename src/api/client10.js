@@ -145,7 +145,6 @@ export const api = {
     getInvoice: (id) => request(`/billing/invoices/${id}`),
     addItem: (invoiceId, payload) => request(`/billing/invoices/${invoiceId}/items`, { method: 'POST', body: payload }),
     addPayment: (invoiceId, payload) => request(`/billing/invoices/${invoiceId}/payments`, { method: 'POST', body: payload }),
-    updateDueDate: (invoiceId, due_date) => request(`/billing/invoices/${invoiceId}/due-date`, { method: 'PATCH', body: { due_date } }),
   },
 
   inpatient: {
@@ -181,43 +180,6 @@ export const api = {
     getPrescription: (id) => request(`/portal/prescriptions/${id}`),
     invoices: () => request('/portal/invoices'),
     getInvoice: (id) => request(`/portal/invoices/${id}`),
-    payChapaInitialize: (invoiceId) => request(`/portal/invoices/${invoiceId}/pay/chapa/initialize`, { method: 'POST' }),
-    payChapaVerify: (txRef) => request(`/portal/invoices/pay/chapa/verify?tx_ref=${encodeURIComponent(txRef)}`),
-    submitPaymentProof: (invoiceId, { transaction_ref, image }) => {
-      const formData = new FormData();
-      formData.append('transaction_ref', transaction_ref);
-      formData.append('image', image);
-      const headers = {};
-      const token = getToken();
-      if (token) headers.Authorization = `Bearer ${token}`;
-      return fetch(`${BASE_URL}/portal/invoices/${invoiceId}/pay/proof`, { method: 'POST', headers, body: formData })
-        .then(async (res) => {
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
-          return data;
-        });
-    },
-  },
-
-  payments: {
-    proofs: (params = {}) => {
-      const qs = new URLSearchParams(params).toString();
-      return request(`/payments/proofs${qs ? `?${qs}` : ''}`);
-    },
-    approveProof: (id, amount) => request(`/payments/proofs/${id}/approve`, { method: 'PATCH', body: amount ? { amount } : {} }),
-    rejectProof: (id, note) => request(`/payments/proofs/${id}/reject`, { method: 'PATCH', body: { note } }),
-    openProofImage: async (id) => {
-      const token = getToken();
-      const headers = {};
-      if (token) headers.Authorization = `Bearer ${token}`;
-      const res = await fetch(`${BASE_URL}/payments/proofs/${id}/image`, { headers });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `Could not load image (${res.status})`);
-      }
-      const blob = await res.blob();
-      return URL.createObjectURL(blob);
-    },
   },
 
   notifications: {
@@ -233,18 +195,12 @@ export const api = {
     },
     create: (payload) => request('/shifts', { method: 'POST', body: payload }),
     remove: (id) => request(`/shifts/${id}`, { method: 'DELETE' }),
-    createPattern: (payload) => request('/shifts/patterns', { method: 'POST', body: payload }),
-    removePattern: (id, from) => request(`/shifts/patterns/${id}${from ? `?from=${from}` : ''}`, { method: 'DELETE' }),
   },
 
   reports: {
     overview: (params = {}) => {
       const qs = new URLSearchParams(params).toString();
       return request(`/reports/overview${qs ? `?${qs}` : ''}`);
-    },
-    profitability: (params = {}) => {
-      const qs = new URLSearchParams(params).toString();
-      return request(`/reports/profitability${qs ? `?${qs}` : ''}`);
     },
   },
 
@@ -255,25 +211,6 @@ export const api = {
     },
     create: (payload) => request('/expenses', { method: 'POST', body: payload }),
     remove: (id) => request(`/expenses/${id}`, { method: 'DELETE' }),
-  },
-
-  treatments: {
-    list: (params = {}) => {
-      const qs = new URLSearchParams(params).toString();
-      return request(`/treatments${qs ? `?${qs}` : ''}`);
-    },
-    create: (payload) => request('/treatments', { method: 'POST', body: payload }),
-    update: (id, payload) => request(`/treatments/${id}`, { method: 'PATCH', body: payload }),
-  },
-
-  staffChat: {
-    contacts: () => request('/staff-chat/contacts'),
-    conversations: () => request('/staff-chat/conversations'),
-    startConversation: (other_user_id) => request('/staff-chat/conversations', { method: 'POST', body: { other_user_id } }),
-    messages: (conversationId, before) =>
-      request(`/staff-chat/conversations/${conversationId}/messages${before ? `?before=${before}` : ''}`),
-    sendMessage: (conversationId, body) =>
-      request(`/staff-chat/conversations/${conversationId}/messages`, { method: 'POST', body: { body } }),
   },
 
   chat: {

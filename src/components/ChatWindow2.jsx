@@ -3,14 +3,10 @@ import { api } from '../api/client';
 import { connectSocket } from '../socket';
 
 // Renders one open conversation: message history, composer, live updates.
-// Used by the staff Messages page, the patient portal, AND team chat
-// (staff<->staff) — `kind` picks which backend namespace and socket event
-// names to use; everything else about rendering a thread is identical.
-export default function ChatWindow({ conversation, currentUserId, kind = 'patient' }) {
-  const apiNs = kind === 'staff' ? api.staffChat : api.chat;
-  const messageEvent = kind === 'staff' ? 'staff_chat:message' : 'chat:message';
-  const typingEvent = kind === 'staff' ? 'staff_chat:typing' : 'chat:typing';
-
+// Used by both the staff Messages page and the patient portal — the two
+// sides differ only in what "the other person" is called, which the parent
+// already resolved onto `conversation.other_name`.
+export default function ChatWindow({ conversation, currentUserId }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -24,7 +20,7 @@ export default function ChatWindow({ conversation, currentUserId, kind = 'patien
     setLoading(true);
     setError('');
     try {
-      const data = await apiNs.messages(conversation.id);
+      const data = await api.chat.messages(conversation.id);
       setMessages(data.messages);
     } catch (err) {
       setError(err.message);
@@ -54,13 +50,13 @@ export default function ChatWindow({ conversation, currentUserId, kind = 'patien
       setOtherTyping(!!is_typing);
     }
 
-    socket.on(messageEvent, handleMessage);
-    socket.on(typingEvent, handleTyping);
+    socket.on('chat:message', handleMessage);
+    socket.on('chat:typing', handleTyping);
     return () => {
-      socket.off(messageEvent, handleMessage);
-      socket.off(typingEvent, handleTyping);
+      socket.off('chat:message', handleMessage);
+      socket.off('chat:typing', handleTyping);
     };
-  }, [conversation.id, currentUserId, messageEvent, typingEvent]);
+  }, [conversation.id, currentUserId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -68,7 +64,7 @@ export default function ChatWindow({ conversation, currentUserId, kind = 'patien
 
   function notifyTyping(isTyping) {
     const socket = connectSocket();
-    socket?.emit(typingEvent, { conversation_id: conversation.id, is_typing: isTyping });
+    socket?.emit('chat:typing', { conversation_id: conversation.id, is_typing: isTyping });
   }
 
   function handleDraftChange(e) {
@@ -88,7 +84,7 @@ export default function ChatWindow({ conversation, currentUserId, kind = 'patien
     clearTimeout(typingTimeoutRef.current);
     notifyTyping(false);
     try {
-      const { message } = await apiNs.sendMessage(conversation.id, body);
+      const { message } = await api.chat.sendMessage(conversation.id, body);
       setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
       setDraft('');
     } catch (err) {
