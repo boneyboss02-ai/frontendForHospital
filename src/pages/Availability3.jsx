@@ -86,9 +86,11 @@ export default function Availability() {
       </div>
 
       <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginTop: -10, marginBottom: 20 }}>
-        {isAdmin
-          ? "These hours drive the appointment slot picker. Booking outside them isn't blocked — reception can still book a walk-in or emergency with a warning — but keeping this accurate means the slot picker actually shows the right times to patients and staff."
-          : 'Admin sets your working hours — this is a read-only view. If they need to change, ask admin to update it here.'}
+        These hours drive the appointment slot picker. Booking outside them isn't blocked —
+        reception can still book a walk-in or emergency with a warning — but keeping this
+        accurate means the slot picker actually shows the right times to patients and staff.
+        Assigning a doctor a one-off shift on <strong>Who's on Duty</strong> also opens that
+        specific day's shift hours for booking automatically — you don't need to duplicate it here.
       </p>
 
       {error && <div className="error-banner">{error}</div>}
@@ -109,28 +111,26 @@ export default function Availability() {
         <p style={{ color: 'var(--muted)' }}>Select a doctor to manage their hours.</p>
       ) : (
         <>
-          {isAdmin && (
-            <div className="card" style={{ marginBottom: 20 }}>
-              <h3 style={{ marginBottom: 14 }}>Add a working-hours window</h3>
-              <form onSubmit={handleAdd}>
-                <div className="form-row">
-                  <div className="field">
-                    <label>Day of week</label>
-                    <select value={dayOfWeek} onChange={(e) => setDayOfWeek(e.target.value)}>
-                      {DAYS.map((d, i) => <option key={i} value={i}>{d}</option>)}
-                    </select>
-                  </div>
-                  <TimePicker label="Start time" value={startTime} onChange={setStartTime} />
-                  <TimePicker label="End time" value={endTime} onChange={setEndTime} />
-                  <div className="field">
-                    <label>Slot length (min)</label>
-                    <input type="number" min="5" step="5" value={slotMinutes} onChange={(e) => setSlotMinutes(e.target.value)} />
-                  </div>
+          <div className="card" style={{ marginBottom: 20 }}>
+            <h3 style={{ marginBottom: 14 }}>Add a working-hours window</h3>
+            <form onSubmit={handleAdd}>
+              <div className="form-row">
+                <div className="field">
+                  <label>Day of week</label>
+                  <select value={dayOfWeek} onChange={(e) => setDayOfWeek(e.target.value)}>
+                    {DAYS.map((d, i) => <option key={i} value={i}>{d}</option>)}
+                  </select>
                 </div>
-                <button className="btn btn-primary">Add window</button>
-              </form>
-            </div>
-          )}
+                <TimePicker label="Start time" value={startTime} onChange={setStartTime} />
+                <TimePicker label="End time" value={endTime} onChange={setEndTime} />
+                <div className="field">
+                  <label>Slot length (min)</label>
+                  <input type="number" min="5" step="5" value={slotMinutes} onChange={(e) => setSlotMinutes(e.target.value)} />
+                </div>
+              </div>
+              <button className="btn btn-primary">Add window</button>
+            </form>
+          </div>
 
           <div className="card">
             <h3 style={{ marginBottom: 14 }}>Current working hours</h3>
@@ -138,14 +138,12 @@ export default function Availability() {
               <p style={{ color: 'var(--muted)' }}>Loading…</p>
             ) : windows.length === 0 ? (
               <p style={{ color: 'var(--muted)' }}>
-                {isAdmin
-                  ? 'No hours set yet — the slot picker will show no open slots for this doctor until you add some.'
-                  : 'No hours set yet — ask admin to set your working hours.'}
+                No hours set yet — the slot picker will show no open slots for this doctor until you add some.
               </p>
             ) : (
               <table>
                 <thead>
-                  <tr><th>Day</th><th>Start</th><th>End</th><th>Slot length</th>{isAdmin && <th></th>}</tr>
+                  <tr><th>Day</th><th>Start</th><th>End</th><th>Slot length</th><th></th></tr>
                 </thead>
                 <tbody>
                   {windows.map((w) => (
@@ -154,9 +152,7 @@ export default function Availability() {
                       <td className="mono">{formatTime12h(w.start_time)}</td>
                       <td className="mono">{formatTime12h(w.end_time)}</td>
                       <td>{w.slot_minutes} min</td>
-                      {isAdmin && (
-                        <td><button className="btn btn-ghost btn-sm" onClick={() => handleDelete(w.id)}>Remove</button></td>
-                      )}
+                      <td><button className="btn btn-ghost btn-sm" onClick={() => handleDelete(w.id)}>Remove</button></td>
                     </tr>
                   ))}
                 </tbody>

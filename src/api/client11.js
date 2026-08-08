@@ -274,28 +274,6 @@ export const api = {
       request(`/staff-chat/conversations/${conversationId}/messages${before ? `?before=${before}` : ''}`),
     sendMessage: (conversationId, body) =>
       request(`/staff-chat/conversations/${conversationId}/messages`, { method: 'POST', body: { body } }),
-    sendAttachment: (conversationId, { body, file }) => {
-      const formData = new FormData();
-      if (body) formData.append('body', body);
-      formData.append('attachment', file);
-      const headers = {};
-      const token = getToken();
-      if (token) headers.Authorization = `Bearer ${token}`;
-      return fetch(`${BASE_URL}/staff-chat/conversations/${conversationId}/messages`, { method: 'POST', headers, body: formData })
-        .then(async (res) => {
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
-          return data;
-        });
-    },
-    getAttachmentBlobUrl: async (conversationId, filename) => {
-      const token = getToken();
-      const headers = {};
-      if (token) headers.Authorization = `Bearer ${token}`;
-      const res = await fetch(`${BASE_URL}/staff-chat/conversations/${conversationId}/attachments/${filename}`, { headers });
-      if (!res.ok) throw new Error('Could not load attachment');
-      return URL.createObjectURL(await res.blob());
-    },
   },
 
   chat: {
@@ -306,28 +284,6 @@ export const api = {
       request(`/chat/conversations/${conversationId}/messages${before ? `?before=${before}` : ''}`),
     sendMessage: (conversationId, body) =>
       request(`/chat/conversations/${conversationId}/messages`, { method: 'POST', body: { body } }),
-    sendAttachment: (conversationId, { body, file }) => {
-      const formData = new FormData();
-      if (body) formData.append('body', body);
-      formData.append('attachment', file);
-      const headers = {};
-      const token = getToken();
-      if (token) headers.Authorization = `Bearer ${token}`;
-      return fetch(`${BASE_URL}/chat/conversations/${conversationId}/messages`, { method: 'POST', headers, body: formData })
-        .then(async (res) => {
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
-          return data;
-        });
-    },
-    getAttachmentBlobUrl: async (conversationId, filename) => {
-      const token = getToken();
-      const headers = {};
-      if (token) headers.Authorization = `Bearer ${token}`;
-      const res = await fetch(`${BASE_URL}/chat/conversations/${conversationId}/attachments/${filename}`, { headers });
-      if (!res.ok) throw new Error('Could not load attachment');
-      return URL.createObjectURL(await res.blob());
-    },
   },
 };
 

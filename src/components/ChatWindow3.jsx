@@ -6,47 +6,6 @@ import { connectSocket } from '../socket';
 // Used by the staff Messages page, the patient portal, AND team chat
 // (staff<->staff) — `kind` picks which backend namespace and socket event
 // names to use; everything else about rendering a thread is identical.
-
-const MAX_ATTACHMENT_MB = 25;
-
-// Lazy-loads an attachment's blob URL (auth-protected, so it can't be a
-// plain <img src>) and renders it appropriately for its type.
-function Attachment({ conversationId, apiNs, message, mine }) {
-  const [url, setUrl] = useState(null);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    apiNs.getAttachmentBlobUrl(conversationId, message.attachment_url)
-      .then((u) => { if (!cancelled) setUrl(u); })
-      .catch(() => { if (!cancelled) setError(true); });
-    return () => { cancelled = true; };
-  }, [conversationId, message.attachment_url]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (error) {
-    return <div style={{ fontSize: '0.78rem', opacity: 0.8 }}>Couldn't load attachment</div>;
-  }
-  if (!url) {
-    return <div style={{ fontSize: '0.78rem', opacity: 0.7 }}>Loading…</div>;
-  }
-
-  if (message.attachment_type === 'image') {
-    return <img src={url} alt={message.attachment_name || 'attachment'} style={{ maxWidth: 220, borderRadius: 8, display: 'block' }} />;
-  }
-  if (message.attachment_type === 'video') {
-    return <video src={url} controls style={{ maxWidth: 240, borderRadius: 8, display: 'block' }} />;
-  }
-  if (message.attachment_type === 'audio') {
-    return <audio src={url} controls style={{ maxWidth: 220 }} />;
-  }
-  // pdf or generic file — just a download link
-  return (
-    <a href={url} download={message.attachment_name || 'file'} style={{ color: mine ? '#fff' : 'var(--teal-700)', textDecoration: 'underline', fontSize: '0.85rem' }}>
-      📎 {message.attachment_name || 'Download file'}
-    </a>
-  );
-}
-
 export default function ChatWindow({ conversation, currentUserId, kind = 'patient' }) {
   const apiNs = kind === 'staff' ? api.staffChat : api.chat;
   const messageEvent = kind === 'staff' ? 'staff_chat:message' : 'chat:message';
@@ -60,11 +19,6 @@ export default function ChatWindow({ conversation, currentUserId, kind = 'patien
   const [otherTyping, setOtherTyping] = useState(false);
   const bottomRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-  const fileInputRef = useRef(null);
-
-  const [recording, setRecording] = useState(false);
-  const mediaRecorderRef = useRef(null);
-  const recordedChunksRef = useRef([]);
 
   async function load() {
     setLoading(true);
@@ -144,59 +98,6 @@ export default function ChatWindow({ conversation, currentUserId, kind = 'patien
     }
   }
 
-  async function sendFile(file) {
-    if (file.size > MAX_ATTACHMENT_MB * 1024 * 1024) {
-      setError(`That file is too large — max ${MAX_ATTACHMENT_MB}MB.`);
-      return;
-    }
-    setSending(true);
-    setError('');
-    try {
-      const { message } = await apiNs.sendAttachment(conversation.id, { file });
-      setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSending(false);
-    }
-  }
-
-  function handleFilePicked(e) {
-    const file = e.target.files[0];
-    e.target.value = ''; // allow picking the same file again later
-    if (file) sendFile(file);
-  }
-
-  async function handleRecordToggle() {
-    if (recording) {
-      mediaRecorderRef.current?.stop();
-      return;
-    }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
-      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-      recordedChunksRef.current = [];
-
-      recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunksRef.current.push(e.data); };
-      recorder.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
-        setRecording(false);
-        const blob = new Blob(recordedChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
-        if (blob.size > 0) {
-          const file = new File([blob], `voice-note-${Date.now()}.webm`, { type: blob.type });
-          sendFile(file);
-        }
-      };
-
-      mediaRecorderRef.current = recorder;
-      recorder.start();
-      setRecording(true);
-    } catch (err) {
-      setError('Could not access the microphone — check your browser permissions.');
-    }
-  }
-
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '68vh', padding: 0 }}>
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)' }}>
@@ -230,11 +131,6 @@ export default function ChatWindow({ conversation, currentUserId, kind = 'patien
                     wordBreak: 'break-word',
                   }}
                 >
-                  {m.attachment_url && (
-                    <div style={{ marginBottom: m.body ? 6 : 0 }}>
-                      <Attachment conversationId={conversation.id} apiNs={apiNs} message={m} mine={mine} />
-                    </div>
-                  )}
                   {m.body}
                   <div
                     className="mono"
@@ -260,41 +156,14 @@ export default function ChatWindow({ conversation, currentUserId, kind = 'patien
 
       {error && <div className="error-banner" style={{ margin: '0 18px 10px' }}>{error}</div>}
 
-      <form onSubmit={handleSend} style={{ display: 'flex', gap: 8, padding: '12px 18px', borderTop: '1px solid var(--line)', alignItems: 'center' }}>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,video/*,audio/*,application/pdf"
-          style={{ display: 'none' }}
-          onChange={handleFilePicked}
-        />
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          title="Attach image, video, or PDF"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={sending || recording}
-        >
-          📎
-        </button>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          title={recording ? 'Stop and send voice note' : 'Record a voice note'}
-          onClick={handleRecordToggle}
-          disabled={sending}
-          style={recording ? { background: 'var(--red)', color: '#fff' } : undefined}
-        >
-          {recording ? '⏹ Recording…' : '🎙'}
-        </button>
+      <form onSubmit={handleSend} style={{ display: 'flex', gap: 10, padding: '12px 18px', borderTop: '1px solid var(--line)' }}>
         <input
           value={draft}
           onChange={handleDraftChange}
           placeholder="Write a message..."
-          disabled={sending || recording}
-          style={{ flex: 1 }}
+          disabled={sending}
         />
-        <button className="btn btn-primary" type="submit" disabled={sending || recording || !draft.trim()}>
+        <button className="btn btn-primary" type="submit" disabled={sending || !draft.trim()}>
           Send
         </button>
       </form>
