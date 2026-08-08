@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../AuthContext';
 import SearchPicker, { makePatientFetcher, makeDoctorFetcher, makeInventoryFetcher } from '../components/SearchPicker';
@@ -24,7 +23,6 @@ export default function Appointments() {
   const isAdmin = user?.role === 'admin'; // view + filter only — booking and day-to-day queue actions are reception/clinical work
 
   const todayISO = new Date().toISOString().slice(0, 10);
-  const [searchParams] = useSearchParams();
 
   const [appointments, setAppointments] = useState([]);
   const [error, setError] = useState('');
@@ -34,9 +32,8 @@ export default function Appointments() {
 
   // Filters — date defaults to today (the old fixed behavior), but all of
   // these are optional and compose together via the same query params the
-  // backend already supported. A ?date= in the URL (e.g. from a Dashboard
-  // "Booked tomorrow" card) overrides the default on first load.
-  const [filterDate, setFilterDate] = useState(searchParams.get('date') || todayISO);
+  // backend already supported.
+  const [filterDate, setFilterDate] = useState(todayISO);
   const [filterDoctor, setFilterDoctor] = useState(null);
   const [filterPatient, setFilterPatient] = useState(null);
   const [filterStatus, setFilterStatus] = useState('');

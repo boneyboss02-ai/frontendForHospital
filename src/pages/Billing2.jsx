@@ -10,9 +10,9 @@ const patientFetcher = makePatientFetcher(api);
 export default function Billing() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [invoices, setInvoices] = useState([]);
-  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
-  const [fromFilter, setFromFilter] = useState(searchParams.get('from') || '');
-  const [toFilter, setToFilter] = useState(searchParams.get('to') || '');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [fromFilter, setFromFilter] = useState('');
+  const [toFilter, setToFilter] = useState('');
   const [patientFilter, setPatientFilter] = useState(null);
   const [overdueOnly, setOverdueOnly] = useState(searchParams.get('overdue') === 'true');
   const [selected, setSelected] = useState(null); // { invoice, items, payments }

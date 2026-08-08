@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../AuthContext';
 import SearchPicker, { makeDoctorFetcher, makePatientFetcher } from '../components/SearchPicker';
@@ -34,10 +33,9 @@ function BarRow({ label, value, max, formatValue }) {
 export default function Reports() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
-  const [searchParams] = useSearchParams();
 
-  const [from, setFrom] = useState(searchParams.get('from') || daysAgoISO(30));
-  const [to, setTo] = useState(searchParams.get('to') || todayISO());
+  const [from, setFrom] = useState(daysAgoISO(30));
+  const [to, setTo] = useState(todayISO());
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -112,31 +110,28 @@ export default function Reports() {
       ) : data && (
         <>
           <div className="stat-grid" style={{ marginBottom: 20 }}>
-            <Link to={`/billing?from=${from}&to=${to}`} className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            <div className="stat-card">
               <div className="value">{data.revenue.toFixed(2)}</div>
               <div className="label">Revenue collected</div>
-            </Link>
-            <Link to={`/billing?from=${from}&to=${to}`} className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            </div>
+            <div className="stat-card">
               <div className="value">{data.invoices_issued.count}</div>
               <div className="label">Invoices issued</div>
-            </Link>
-            <Link to="/patients" className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            </div>
+            <div className="stat-card">
               <div className="value">{data.new_patients}</div>
               <div className="label">New patients</div>
-            </Link>
-            <Link to="/inventory?low_stock=true" className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            </div>
+            <div className="stat-card">
               <div className="value">{data.low_stock_count}</div>
               <div className="label">Low stock items</div>
-            </Link>
+            </div>
             {data.expenses !== undefined && (
               <>
-                <Link to="/expenses" className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+                <div className="stat-card">
                   <div className="value">{data.expenses.toFixed(2)}</div>
                   <div className="label">Expenses</div>
-                </Link>
-                {/* Profit is derived (revenue minus expenses) — there's no
-                    separate page it maps to, so it's left as a plain card
-                    rather than a link that would go nowhere useful. */}
+                </div>
                 <div className="stat-card">
                   <div className="value" style={{ color: data.profit >= 0 ? 'inherit' : 'var(--red)' }}>{data.profit.toFixed(2)}</div>
                   <div className="label">Profit</div>
@@ -248,19 +243,19 @@ export default function Reports() {
               ) : profitData && (
                 <>
                   <div className="stat-grid" style={{ marginBottom: 18 }}>
-                    <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => document.getElementById('profit-visits-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+                    <div className="stat-card">
                       <div className="value">{profitData.summary.gross_revenue.toFixed(2)}</div>
                       <div className="label">Revenue (procedures)</div>
                     </div>
-                    <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => document.getElementById('profit-visits-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+                    <div className="stat-card">
                       <div className="value">{profitData.summary.cost_of_supplies.toFixed(2)}</div>
                       <div className="label">Cost of supplies used</div>
                     </div>
-                    <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => document.getElementById('profit-visits-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+                    <div className="stat-card">
                       <div className="value">{profitData.summary.gross_profit.toFixed(2)}</div>
                       <div className="label">Gross profit</div>
                     </div>
-                    <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => document.getElementById('profit-visits-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+                    <div className="stat-card">
                       <div className="value" style={{ color: profitData.summary.net_profit >= 0 ? 'inherit' : 'var(--red)' }}>
                         {profitData.summary.net_profit.toFixed(2)}
                       </div>
@@ -271,7 +266,7 @@ export default function Reports() {
                   {profitData.visits.length === 0 ? (
                     <p style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>No completed visits with billing in this range.</p>
                   ) : (
-                    <table id="profit-visits-table">
+                    <table>
                       <thead>
                         <tr><th>Date</th><th>Patient</th><th>Doctor</th><th>Revenue</th><th>Supply cost</th><th>Profit</th></tr>
                       </thead>

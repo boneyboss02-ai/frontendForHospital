@@ -84,33 +84,33 @@ function AdminDashboard({ user }) {
       {stats && (
         <>
           <div className="stat-grid" style={{ marginBottom: 20 }}>
-            <Link to={`/reports?from=${todayISO()}&to=${todayISO()}`} className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            <div className="stat-card">
               <div className="value">{stats.revenueToday?.toFixed(2)}</div>
               <div className="label">Revenue today</div>
-            </Link>
-            <Link to={`/reports?from=${startOfWeekISO()}&to=${todayISO()}`} className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            </div>
+            <div className="stat-card">
               <div className="value">{stats.revenueWeek?.toFixed(2)}</div>
               <div className="label">Revenue this week</div>
-            </Link>
-            <Link to={`/reports?from=${startOfMonthISO()}&to=${todayISO()}`} className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            </div>
+            <div className="stat-card">
               <div className="value">{stats.revenueMonth?.toFixed(2)}</div>
               <div className="label">Revenue this month</div>
-            </Link>
-            <Link to={`/reports?from=${startOfMonthISO()}&to=${todayISO()}`} className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            </div>
+            <div className="stat-card">
               <div className="value" style={{ color: stats.profitMonth >= 0 ? 'inherit' : 'var(--red)' }}>{stats.profitMonth?.toFixed(2)}</div>
               <div className="label">Profit this month (after expenses)</div>
-            </Link>
+            </div>
           </div>
 
           <div className="stat-grid" style={{ marginBottom: 20 }}>
-            <Link to={`/appointments?date=${todayISO()}`} className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            <div className="stat-card">
               <div className="value">{stats.apptsToday}</div>
               <div className="label">Booked today</div>
-            </Link>
-            <Link to={`/appointments?date=${tomorrowISO()}`} className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            </div>
+            <div className="stat-card">
               <div className="value">{stats.apptsTomorrow}</div>
               <div className="label">Booked tomorrow</div>
-            </Link>
+            </div>
             <Link
               to="/billing?overdue=true"
               className="stat-card"
@@ -119,7 +119,7 @@ function AdminDashboard({ user }) {
               <div className="value" style={{ color: stats.overdue > 0 ? 'var(--red)' : undefined }}>{stats.overdue}</div>
               <div className="label">Payments overdue</div>
             </Link>
-            <Link to="/inventory?low_stock=true" className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            <Link to="/inventory" className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
               <div className="value">{stats.lowStock}</div>
               <div className="label">Low stock items</div>
             </Link>
@@ -197,34 +197,34 @@ function ReceptionistDashboard({ user }) {
       {stats && (
         <div className="stat-grid">
           {stats.todayAppointments !== undefined && (
-            <Link to={`/appointments?date=${todayISO()}`} className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            <div className="stat-card">
               <div className="value">{stats.todayAppointments}</div>
               <div className="label">Appointments today</div>
-            </Link>
+            </div>
           )}
           {stats.waiting !== undefined && (
-            <Link to={`/appointments?date=${todayISO()}`} className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            <div className="stat-card">
               <div className="value">{stats.waiting}</div>
               <div className="label">Patients waiting</div>
-            </Link>
+            </div>
           )}
           {stats.admitted !== undefined && (
-            <Link to="/beds" className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            <div className="stat-card">
               <div className="value">{stats.admitted}</div>
               <div className="label">In treatment now</div>
-            </Link>
+            </div>
           )}
           {stats.totalBeds !== undefined && (
-            <Link to="/beds" className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            <div className="stat-card">
               <div className="value">{stats.availableBeds}/{stats.totalBeds}</div>
               <div className="label">Chairs available</div>
-            </Link>
+            </div>
           )}
           {stats.unpaidInvoices !== undefined && (
-            <Link to="/billing?status=unpaid" className="stat-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+            <div className="stat-card">
               <div className="value">{stats.unpaidInvoices}</div>
               <div className="label">Unpaid invoices</div>
-            </Link>
+            </div>
           )}
           {stats.overdueInvoices !== undefined && (
             <Link

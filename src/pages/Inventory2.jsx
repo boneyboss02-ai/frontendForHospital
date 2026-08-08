@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../AuthContext';
 
@@ -9,9 +8,7 @@ import { useAuth } from '../AuthContext';
 export default function Inventory() {
   const { user } = useAuth();
   const canManage = user?.role === 'admin';
-  const [searchParams] = useSearchParams();
   const [tab, setTab] = useState('all'); // 'all' | 'medicine' | 'supply'
-  const [lowStockOnly, setLowStockOnly] = useState(searchParams.get('low_stock') === 'true');
   const [items, setItems] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -23,9 +20,7 @@ export default function Inventory() {
     setLoading(true);
     setError('');
     try {
-      const params = {};
-      if (tab !== 'all') params.category = tab;
-      if (lowStockOnly) params.low_stock = 'true';
+      const params = tab === 'all' ? {} : { category: tab };
       const res = await api.inventory.items(params);
       setItems(res.items);
     } catch (err) {
@@ -35,7 +30,7 @@ export default function Inventory() {
     }
   }
 
-  useEffect(() => { load(); }, [tab, lowStockOnly]);
+  useEffect(() => { load(); }, [tab]);
 
   async function handleAddItem(e) {
     e.preventDefault();
@@ -136,16 +131,10 @@ export default function Inventory() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 18, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className={`btn btn-sm ${tab === 'all' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setTab('all')}>All</button>
-          <button className={`btn btn-sm ${tab === 'medicine' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setTab('medicine')}>Medicines</button>
-          <button className={`btn btn-sm ${tab === 'supply' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setTab('supply')}>Supplies</button>
-        </div>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem' }}>
-          <input type="checkbox" checked={lowStockOnly} onChange={(e) => setLowStockOnly(e.target.checked)} />
-          Low stock only
-        </label>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
+        <button className={`btn btn-sm ${tab === 'all' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setTab('all')}>All</button>
+        <button className={`btn btn-sm ${tab === 'medicine' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setTab('medicine')}>Medicines</button>
+        <button className={`btn btn-sm ${tab === 'supply' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setTab('supply')}>Supplies</button>
       </div>
 
       {loading ? (
