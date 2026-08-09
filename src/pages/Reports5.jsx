@@ -134,17 +134,12 @@ export default function Reports() {
                   <div className="value">{data.expenses.toFixed(2)}</div>
                   <div className="label">Expenses</div>
                 </Link>
-                <div className="stat-card">
-                  <div className="value">{data.cost_of_supplies.toFixed(2)}</div>
-                  <div className="label">Medicine/supplies used</div>
-                </div>
-                {/* Profit is derived (revenue minus expenses minus supplies
-                    cost) — there's no separate page it maps to, so it's
-                    left as a plain card rather than a link that would go
-                    nowhere useful. */}
+                {/* Profit is derived (revenue minus expenses) — there's no
+                    separate page it maps to, so it's left as a plain card
+                    rather than a link that would go nowhere useful. */}
                 <div className="stat-card">
                   <div className="value" style={{ color: data.profit >= 0 ? 'inherit' : 'var(--red)' }}>{data.profit.toFixed(2)}</div>
-                  <div className="label">Profit (after expenses &amp; supplies)</div>
+                  <div className="label">Profit</div>
                 </div>
               </>
             )}
