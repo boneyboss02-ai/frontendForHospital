@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { to: '/prescriptions', label: 'Prescriptions', roles: ['doctor', 'nurse'] },
   { to: '/inventory', label: 'Inventory', roles: ['admin', 'nurse'] },
   { to: '/treatments', label: 'Treatments', roles: ['admin'] },
-  { to: '/billing', label: 'Billing', roles: ['admin', 'receptionist', 'doctor'] },
+  { to: '/billing', label: 'Billing', roles: ['admin', 'receptionist'] },
   { to: '/reports', label: 'Reports', roles: ['admin', 'receptionist'] },
   { to: '/expenses', label: 'Expenses', roles: ['admin'] },
   { to: '/availability', label: 'My Schedule', roles: ['admin', 'doctor'] },

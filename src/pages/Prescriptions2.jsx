@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { useAuth } from '../AuthContext';
-import SearchPicker, { makePatientFetcher } from '../components/SearchPicker';
+import SearchPicker, { makePatientFetcher, makeMedicineFetcher } from '../components/SearchPicker';
 
 const patientFetcher = makePatientFetcher(api);
+const medicineFetcher = makeMedicineFetcher(api);
 
 // Prescriptions are documentation only — the doctor writes it, the patient
 // sees it in their portal (and takes it to an outside pharmacy). There's no
@@ -19,7 +20,7 @@ export default function Prescriptions() {
 
   const [showRxForm, setShowRxForm] = useState(false);
   const [rxPatient, setRxPatient] = useState(null);
-  const [rxMedicine, setRxMedicine] = useState('');
+  const [rxMedicine, setRxMedicine] = useState(null);
   const [rxDosage, setRxDosage] = useState('');
   const [rxFrequency, setRxFrequency] = useState('');
   const [rxDuration, setRxDuration] = useState('');
@@ -55,22 +56,22 @@ export default function Prescriptions() {
   async function handleCreatePrescription(e) {
     e.preventDefault();
     setError('');
-    if (!rxPatient || !rxMedicine.trim()) {
-      setError('Please select a patient and enter a medicine name.');
+    if (!rxPatient || !rxMedicine) {
+      setError('Please select a patient and a medicine.');
       return;
     }
     try {
       await api.prescriptions.create({
         patient_id: rxPatient.id,
         items: [{
-          medicine_name: rxMedicine.trim(),
+          medicine_id: rxMedicine.id,
           dosage: rxDosage,
           frequency: rxFrequency,
           duration_days: rxDuration ? Number(rxDuration) : undefined,
         }],
       });
       setRxPatient(null);
-      setRxMedicine('');
+      setRxMedicine(null);
       setRxDosage('');
       setRxFrequency('');
       setRxDuration('');
@@ -103,10 +104,7 @@ export default function Prescriptions() {
           <form onSubmit={handleCreatePrescription}>
             <div className="form-row">
               <SearchPicker label="Patient" required value={rxPatient} onSelect={setRxPatient} fetchResults={patientFetcher} placeholder="Search patient by name or code…" />
-              <div className="field">
-                <label>Medicine</label>
-                <input required placeholder="e.g. Amoxicillin 500mg" value={rxMedicine} onChange={(e) => setRxMedicine(e.target.value)} />
-              </div>
+              <SearchPicker label="Medicine" required value={rxMedicine} onSelect={setRxMedicine} fetchResults={medicineFetcher} placeholder="Search medicine…" />
             </div>
             <div className="form-row">
               <div className="field">

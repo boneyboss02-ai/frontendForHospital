@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
-import { useAuth } from '../AuthContext';
 import SearchPicker, { makePatientFetcher } from '../components/SearchPicker';
 
 const STATUS_BADGE = { unpaid: 'busy', partially_paid: 'wait', paid: 'ok', cancelled: 'neutral' };
@@ -9,13 +8,6 @@ const STATUS_BADGE = { unpaid: 'busy', partially_paid: 'wait', paid: 'ok', cance
 const patientFetcher = makePatientFetcher(api);
 
 export default function Billing() {
-  const { user } = useAuth();
-  // Doctors can see billing (they asked to be able to check whether a
-  // patient's paid), but everything that creates or changes money —
-  // invoices, line items, payments, due dates, payment-proof review —
-  // stays reception/admin. This is read-only access, not full access.
-  const isDoctor = user?.role === 'doctor';
-  const canManage = !isDoctor;
   const [searchParams, setSearchParams] = useSearchParams();
   const [invoices, setInvoices] = useState([]);
   const [statusFilter, setStatusFilter] = useState('');
@@ -47,10 +39,6 @@ export default function Billing() {
   const [proofImages, setProofImages] = useState({}); // { [proofId]: blobUrl }
 
   async function loadProofs() {
-    if (isDoctor) {
-      setProofsLoading(false);
-      return;
-    }
     setProofsLoading(true);
     try {
       const { proofs } = await api.payments.proofs({ status: 'pending' });
@@ -116,7 +104,6 @@ export default function Billing() {
   }
 
   async function loadOverdue() {
-    if (isDoctor) return;
     try {
       const { invoices } = await api.billing.invoices({ overdue: 'true' });
       setOverdueList(invoices);
@@ -228,16 +215,14 @@ export default function Billing() {
           <div className="eyebrow">Billing</div>
           <h1>Invoices</h1>
         </div>
-        {canManage && (
-          <button className="btn btn-primary" onClick={() => setShowInvoiceForm((s) => !s)}>
-            {showInvoiceForm ? 'Cancel' : '+ New invoice'}
-          </button>
-        )}
+        <button className="btn btn-primary" onClick={() => setShowInvoiceForm((s) => !s)}>
+          {showInvoiceForm ? 'Cancel' : '+ New invoice'}
+        </button>
       </div>
 
       {error && <div className="error-banner">{error}</div>}
 
-      {canManage && !proofsLoading && proofs.length > 0 && (
+      {!proofsLoading && proofs.length > 0 && (
         <div className="card" style={{ marginBottom: 24, borderColor: 'var(--amber)' }}>
           <h3 style={{ marginBottom: 4 }}>Payment proofs awaiting review ({proofs.length})</h3>
           <p style={{ fontSize: '0.82rem', color: 'var(--muted)', marginTop: 0, marginBottom: 14 }}>
@@ -266,7 +251,7 @@ export default function Billing() {
         </div>
       )}
 
-      {canManage && showInvoiceForm && (
+      {showInvoiceForm && (
         <div className="card" style={{ marginBottom: 24 }}>
           <h3 style={{ marginBottom: 16 }}>New invoice</h3>
           <form onSubmit={handleCreateInvoice}>
@@ -297,7 +282,7 @@ export default function Billing() {
         </div>
       )}
 
-      {canManage && overdueList.length > 0 && (
+      {overdueList.length > 0 && (
         <div className="card" style={{ marginBottom: 24, borderColor: 'var(--red)' }}>
           <h3 style={{ marginBottom: 10, color: 'var(--red)' }}>
             {overdueList.length} patient{overdueList.length > 1 ? 's' : ''} past their payment deadline
@@ -411,28 +396,18 @@ export default function Billing() {
               Print / Save as PDF
             </button>
 
-            {canManage ? (
-              <>
-                <form onSubmit={handleSetDueDate} style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginTop: 14 }}>
-                  <div className="field" style={{ marginBottom: 0, flex: 1 }}>
-                    <label>Payment due by</label>
-                    <input type="date" value={dueDateDraft} onChange={(e) => setDueDateDraft(e.target.value)} />
-                  </div>
-                  <button className="btn btn-ghost btn-sm">Save</button>
-                </form>
-                <p style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: 4 }}>
-                  {selected.invoice.due_date
-                    ? `Currently due ${new Date(selected.invoice.due_date).toLocaleDateString()}. Clear the date and save to remove the deadline.`
-                    : 'No deadline set — this invoice will never show as overdue.'}
-                </p>
-              </>
-            ) : (
-              selected.invoice.due_date && (
-                <p style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: 14 }}>
-                  Payment due by {new Date(selected.invoice.due_date).toLocaleDateString()}
-                </p>
-              )
-            )}
+            <form onSubmit={handleSetDueDate} style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginTop: 14 }}>
+              <div className="field" style={{ marginBottom: 0, flex: 1 }}>
+                <label>Payment due by</label>
+                <input type="date" value={dueDateDraft} onChange={(e) => setDueDateDraft(e.target.value)} />
+              </div>
+              <button className="btn btn-ghost btn-sm">Save</button>
+            </form>
+            <p style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: 4 }}>
+              {selected.invoice.due_date
+                ? `Currently due ${new Date(selected.invoice.due_date).toLocaleDateString()}. Clear the date and save to remove the deadline.`
+                : 'No deadline set — this invoice will never show as overdue.'}
+            </p>
 
             <div style={{ margin: '14px 0' }}>
               {selected.items.length === 0 ? (
@@ -459,7 +434,7 @@ export default function Billing() {
               </div>
             </div>
 
-            {canManage && (!showItemForm ? (
+            {!showItemForm ? (
               <button className="btn btn-ghost btn-sm" onClick={() => setShowItemForm(true)}>+ Add line item</button>
             ) : (
               <form onSubmit={handleAddItem} style={{ marginBottom: 14 }}>
@@ -472,48 +447,34 @@ export default function Billing() {
                 </div>
                 <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }}>Add</button>
               </form>
-            ))}
-
-            {canManage && (
-              <div style={{ borderTop: '1px solid var(--line)', paddingTop: 14, marginTop: 4 }}>
-                <h3 style={{ fontSize: '0.9rem', marginBottom: 10 }}>Record payment</h3>
-                <form onSubmit={handleAddPayment}>
-                  <div className="form-row">
-                    <input required type="number" step="0.01" placeholder="Amount" value={paymentForm.amount} onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })} />
-                    <select value={paymentForm.method} onChange={(e) => setPaymentForm({ ...paymentForm, method: e.target.value })}>
-                      <option value="cash">Cash</option>
-                      <option value="card">Card</option>
-                      <option value="insurance">Insurance</option>
-                      <option value="mobile_money">Mobile money</option>
-                    </select>
-                  </div>
-                  <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }}>Record payment</button>
-                </form>
-
-                {selected.payments.length > 0 && (
-                  <div style={{ marginTop: 14 }}>
-                    {selected.payments.map((p) => (
-                      <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--muted)', padding: '4px 0' }}>
-                        <span>{p.method} — {new Date(p.paid_at).toLocaleDateString()}</span>
-                        <span className="mono">{Number(p.amount).toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             )}
 
-            {!canManage && selected.payments.length > 0 && (
-              <div style={{ borderTop: '1px solid var(--line)', paddingTop: 14, marginTop: 4 }}>
-                <h3 style={{ fontSize: '0.9rem', marginBottom: 10 }}>Payments</h3>
-                {selected.payments.map((p) => (
-                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--muted)', padding: '4px 0' }}>
-                    <span>{p.method} — {new Date(p.paid_at).toLocaleDateString()}</span>
-                    <span className="mono">{Number(p.amount).toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div style={{ borderTop: '1px solid var(--line)', paddingTop: 14, marginTop: 4 }}>
+              <h3 style={{ fontSize: '0.9rem', marginBottom: 10 }}>Record payment</h3>
+              <form onSubmit={handleAddPayment}>
+                <div className="form-row">
+                  <input required type="number" step="0.01" placeholder="Amount" value={paymentForm.amount} onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })} />
+                  <select value={paymentForm.method} onChange={(e) => setPaymentForm({ ...paymentForm, method: e.target.value })}>
+                    <option value="cash">Cash</option>
+                    <option value="card">Card</option>
+                    <option value="insurance">Insurance</option>
+                    <option value="mobile_money">Mobile money</option>
+                  </select>
+                </div>
+                <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }}>Record payment</button>
+              </form>
+
+              {selected.payments.length > 0 && (
+                <div style={{ marginTop: 14 }}>
+                  {selected.payments.map((p) => (
+                    <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--muted)', padding: '4px 0' }}>
+                      <span>{p.method} — {new Date(p.paid_at).toLocaleDateString()}</span>
+                      <span className="mono">{Number(p.amount).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
