@@ -9,20 +9,15 @@ import { useAuth } from '../AuthContext';
 export default function Inventory() {
   const { user } = useAuth();
   const canManage = user?.role === 'admin';
-  // A general admin (no branch_id) sees every branch's items mixed
-  // together and must say which branch a new item belongs to; a branch
-  // admin's items are always their own branch, forced server-side.
-  const isGeneralAdmin = canManage && (user?.branch_id === null || user?.branch_id === undefined);
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState('all'); // 'all' | 'medicine' | 'supply'
   const [lowStockOnly, setLowStockOnly] = useState(searchParams.get('low_stock') === 'true');
   const [items, setItems] = useState([]);
-  const [branches, setBranches] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: '', category: 'medicine', unit: 'tablet', stock_quantity: '', reorder_level: '10', unit_price: '', branch_id: '' });
+  const [form, setForm] = useState({ name: '', category: 'medicine', unit: 'tablet', stock_quantity: '', reorder_level: '10', unit_price: '' });
 
   async function load() {
     setLoading(true);
@@ -31,11 +26,8 @@ export default function Inventory() {
       const params = {};
       if (tab !== 'all') params.category = tab;
       if (lowStockOnly) params.low_stock = 'true';
-      const calls = [api.inventory.items(params)];
-      if (isGeneralAdmin) calls.push(api.branches.list());
-      const [res, branchesRes] = await Promise.all(calls);
+      const res = await api.inventory.items(params);
       setItems(res.items);
-      if (branchesRes) setBranches(branchesRes.branches);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -48,10 +40,6 @@ export default function Inventory() {
   async function handleAddItem(e) {
     e.preventDefault();
     setError('');
-    if (isGeneralAdmin && !form.branch_id) {
-      setError('Please select which branch this item belongs to.');
-      return;
-    }
     try {
       await api.inventory.createItem({
         name: form.name,
@@ -60,9 +48,8 @@ export default function Inventory() {
         stock_quantity: Number(form.stock_quantity) || 0,
         reorder_level: Number(form.reorder_level) || 10,
         unit_price: Number(form.unit_price) || 0,
-        branch_id: isGeneralAdmin ? form.branch_id : undefined,
       });
-      setForm({ name: '', category: 'medicine', unit: 'tablet', stock_quantity: '', reorder_level: '10', unit_price: '', branch_id: '' });
+      setForm({ name: '', category: 'medicine', unit: 'tablet', stock_quantity: '', reorder_level: '10', unit_price: '' });
       setShowForm(false);
       load();
     } catch (err) {
@@ -143,15 +130,6 @@ export default function Inventory() {
                 <label>Unit price</label>
                 <input type="number" step="0.01" value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} />
               </div>
-              {isGeneralAdmin && (
-                <div className="field">
-                  <label>Branch *</label>
-                  <select value={form.branch_id} onChange={(e) => setForm({ ...form, branch_id: e.target.value })}>
-                    <option value="">Select…</option>
-                    {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                  </select>
-                </div>
-              )}
             </div>
             <button className="btn btn-primary">Save item</button>
           </form>
@@ -176,13 +154,12 @@ export default function Inventory() {
         <div className="card">
           <table>
             <thead>
-              <tr><th>Name</th>{isGeneralAdmin && <th>Branch</th>}<th>Category</th><th>Unit</th><th>Stock</th><th>Reorder level</th><th>Price</th><th></th></tr>
+              <tr><th>Name</th><th>Category</th><th>Unit</th><th>Stock</th><th>Reorder level</th><th>Price</th><th></th></tr>
             </thead>
             <tbody>
               {items.map((it) => (
                 <tr key={it.id}>
                   <td>{it.name}</td>
-                  {isGeneralAdmin && <td style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{it.branch_name}</td>}
                   <td style={{ textTransform: 'capitalize' }}>{it.category}</td>
                   <td>{it.unit}</td>
                   <td className="mono">{it.stock_quantity}</td>

@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { api } from '../api/client';
 import NotificationBell from './NotificationBell';
 import Brand from './Brand';
 
@@ -9,7 +7,7 @@ const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', end: true, roles: ['admin', 'receptionist'] },
   { to: '/patients', label: 'Patients' },
   { to: '/appointments', label: 'Appointments' },
-  { to: '/beds', label: 'Chairs & Rooms', roles: ['admin', 'nurse', 'receptionist'] },
+  { to: '/beds', label: 'Chairs & Rooms', roles: ['nurse', 'receptionist'] },
   { to: '/lab', label: 'Lab', roles: ['doctor', 'nurse'] },
   { to: '/prescriptions', label: 'Prescriptions', roles: ['doctor', 'nurse'] },
   { to: '/inventory', label: 'Inventory', roles: ['admin', 'nurse'] },
@@ -17,7 +15,6 @@ const NAV_ITEMS = [
   { to: '/billing', label: 'Billing', roles: ['admin', 'receptionist', 'doctor'] },
   { to: '/reports', label: 'Reports', roles: ['admin', 'receptionist'] },
   { to: '/expenses', label: 'Expenses', roles: ['admin'] },
-  { to: '/branches', label: 'Branches', roles: ['admin'] },
   { to: '/availability', label: 'My Schedule', roles: ['admin', 'doctor'] },
   { to: '/schedule', label: "Who's on Duty" },
   { to: '/messages', label: 'Messages', roles: ['doctor'] },
@@ -27,21 +24,6 @@ const NAV_ITEMS = [
 export default function Shell() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const hasBranch = user?.branch_id !== null && user?.branch_id !== undefined;
-  // Nobody should ever be unsure which branch's data they're looking at.
-  // Patients don't reach this Shell at all (they get PortalShell), so this
-  // only ever needs to answer for staff — a branch-scoped person always
-  // has one home branch, and a general admin explicitly doesn't (they see
-  // everything, and pick a branch per-page when they need to narrow it,
-  // e.g. the Reports drill-down).
-  const [branchName, setBranchName] = useState(null);
-
-  useEffect(() => {
-    if (!hasBranch) return;
-    api.branches.list()
-      .then((d) => setBranchName(d.branches.find((b) => b.id === user.branch_id)?.name || null))
-      .catch(() => {});
-  }, [hasBranch, user?.branch_id]);
 
   function handleLogout() {
     logout();
@@ -66,10 +48,7 @@ export default function Shell() {
         </nav>
         <div className="nav-role">
           <div style={{ color: '#EDEFEC', fontWeight: 600 }}>{user?.full_name}</div>
-          <div style={{ textTransform: 'capitalize' }}>{user?.role}</div>
-          <div style={{ fontSize: '0.75rem', opacity: 0.75, marginBottom: 10 }}>
-            {hasBranch ? (branchName || '…') : 'All branches'}
-          </div>
+          <div style={{ textTransform: 'capitalize', marginBottom: 10 }}>{user?.role}</div>
           <button className="btn btn-ghost btn-sm" style={{ color: '#EDEFEC', borderColor: 'rgba(255,255,255,0.2)' }} onClick={handleLogout}>
             Log out
           </button>

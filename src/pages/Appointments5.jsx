@@ -40,11 +40,6 @@ export default function Appointments() {
   const [filterDoctor, setFilterDoctor] = useState(null);
   const [filterPatient, setFilterPatient] = useState(null);
   const [filterStatus, setFilterStatus] = useState('');
-  // General admin only — anyone branch-scoped is always forced to their
-  // own branch server-side regardless of this.
-  const isGeneralAdmin = isAdmin && (user?.branch_id === null || user?.branch_id === undefined);
-  const [branches, setBranches] = useState([]);
-  const [filterBranch, setFilterBranch] = useState('');
 
   const [patient, setPatient] = useState(null);
   const [doctor, setDoctor] = useState(null);
@@ -67,21 +62,10 @@ export default function Appointments() {
   // Fetched once — the treatment picker in the "Complete visit" form reads
   // from this rather than hitting the network on every click.
   const [treatments, setTreatments] = useState([]);
-  // This doctor's OWN branch inventory, by name (lowercased) — treatments
-  // are clinic-wide, but inventory is per-branch, so a treatment's recipe
-  // (e.g. "needs 2x Lidocaine") has to be resolved against whichever
-  // branch this doctor is actually at, not whatever branch the recipe
-  // happened to be built by looking at. See applyTreatment below.
-  const [branchInventoryByName, setBranchInventoryByName] = useState({});
 
   useEffect(() => {
     if (user?.role === 'doctor') {
       api.treatments.list().then((d) => setTreatments(d.treatments)).catch(() => {});
-      api.inventory.items().then((d) => {
-        const map = {};
-        for (const item of d.items) map[item.name.trim().toLowerCase()] = item;
-        setBranchInventoryByName(map);
-      }).catch(() => {});
     }
   }, [user?.role]);
 
@@ -93,7 +77,6 @@ export default function Appointments() {
       if (filterDoctor) params.doctor_id = filterDoctor.id;
       if (filterPatient) params.patient_id = filterPatient.id;
       if (filterStatus) params.status = filterStatus;
-      if (isGeneralAdmin && filterBranch) params.branch_id = filterBranch;
       const { appointments } = await api.appointments.list(params);
       setAppointments(appointments);
     } catch (err) {
@@ -103,11 +86,7 @@ export default function Appointments() {
     }
   }
 
-  useEffect(() => {
-    if (isGeneralAdmin) api.branches.list().then((d) => setBranches(d.branches)).catch(() => {});
-  }, [isGeneralAdmin]);
-
-  useEffect(() => { load(); }, [filterDate, filterDoctor, filterPatient, filterStatus, filterBranch]);
+  useEffect(() => { load(); }, [filterDate, filterDoctor, filterPatient, filterStatus]);
 
   async function handleBook(e) {
     e.preventDefault();
@@ -190,37 +169,21 @@ export default function Appointments() {
   // reception having to trust they remembered the right price. Both lists
   // stay editable afterward via the normal Remove buttons, so a doctor can
   // still correct a quantity or drop something for an unusual case.
-  //
-  // Ingredients are resolved by NAME against this doctor's own branch
-  // inventory, not by the treatment recipe's stored item_id — that id
-  // could point at a different branch's copy of the item entirely, since
-  // treatments are clinic-wide but inventory is per-branch. If this
-  // branch doesn't stock an ingredient at all, it's skipped (with a
-  // warning) rather than silently touching the wrong branch's stock.
   function applyTreatment(t) {
     setCharges((c) => [...c, { description: t.name, amount: Number(t.price) }]);
     if (t.items.length > 0) {
-      const missing = [];
       setItemsUsed((items) => {
         const next = [...items];
         for (const ti of t.items) {
-          const branchItem = branchInventoryByName[ti.item_name.trim().toLowerCase()];
-          if (!branchItem) {
-            missing.push(ti.item_name);
-            continue;
-          }
-          const existingIdx = next.findIndex((u) => u.item.id === branchItem.id);
+          const existingIdx = next.findIndex((u) => u.item.id === ti.item_id);
           if (existingIdx >= 0) {
             next[existingIdx] = { ...next[existingIdx], quantity: next[existingIdx].quantity + Number(ti.quantity) };
           } else {
-            next.push({ item: { id: branchItem.id, label: branchItem.name }, quantity: Number(ti.quantity) });
+            next.push({ item: { id: ti.item_id, label: ti.item_name }, quantity: Number(ti.quantity) });
           }
         }
         return next;
       });
-      if (missing.length > 0) {
-        setError(`"${t.name}" also uses ${missing.join(', ')}, which isn't in this branch's inventory — add it under Inventory, or log usage manually.`);
-      }
     }
   }
 
@@ -305,20 +268,11 @@ export default function Appointments() {
               <option value="no_show">No-show</option>
             </select>
           </div>
-          {isGeneralAdmin && (
-            <div className="field" style={{ maxWidth: 170 }}>
-              <label>Branch</label>
-              <select value={filterBranch} onChange={(e) => setFilterBranch(e.target.value)}>
-                <option value="">All branches</option>
-                {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-            </div>
-          )}
-          {(filterDate !== todayISO || filterDoctor || filterPatient || filterStatus || filterBranch) && (
+          {(filterDate !== todayISO || filterDoctor || filterPatient || filterStatus) && (
             <button
               type="button"
               className="btn btn-ghost btn-sm"
-              onClick={() => { setFilterDate(todayISO); setFilterDoctor(null); setFilterPatient(null); setFilterStatus(''); setFilterBranch(''); }}
+              onClick={() => { setFilterDate(todayISO); setFilterDoctor(null); setFilterPatient(null); setFilterStatus(''); }}
             >
               Reset filters
             </button>
@@ -365,7 +319,6 @@ export default function Appointments() {
                 <th>Time</th>
                 <th>Patient</th>
                 <th>Doctor</th>
-                {isGeneralAdmin && <th>Branch</th>}
                 <th>Status</th>
                 <th></th>
               </tr>
@@ -378,7 +331,6 @@ export default function Appointments() {
                     <td>{new Date(a.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                     <td>{a.patient_name} <span style={{ color: 'var(--muted)' }} className="mono">({a.patient_code})</span></td>
                     <td>{a.doctor_name}</td>
-                    {isGeneralAdmin && <td style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{a.branch_name}</td>}
                     <td><span className={`badge ${STATUS_BADGE[a.status]}`}>{a.status.replace('_', ' ')}</span></td>
                     <td style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                       {!isAdmin && (

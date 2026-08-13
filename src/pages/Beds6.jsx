@@ -23,10 +23,6 @@ export default function Beds() {
   const [rooms, setRooms] = useState([]);
   const [admissions, setAdmissions] = useState([]);
   const [branches, setBranches] = useState([]);
-  // Which branch's rooms/beds general admin is currently viewing — '' means
-  // all branches combined. A branch admin never sees this, they only ever
-  // have their own branch's data regardless.
-  const [viewBranch, setViewBranch] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -44,13 +40,10 @@ export default function Beds() {
   async function load() {
     setLoading(true);
     try {
-      const bedParams = isGeneralAdmin && viewBranch ? { branch_id: viewBranch } : {};
-      const admissionParams = { status: 'admitted', ...(isGeneralAdmin && viewBranch ? { branch_id: viewBranch } : {}) };
-      const wardParams = isGeneralAdmin && viewBranch ? { branch_id: viewBranch } : {};
       const calls = [
-        api.inpatient.beds(bedParams),
-        api.inpatient.admissions(admissionParams),
-        api.inpatient.wards(wardParams),
+        api.inpatient.beds(),
+        api.inpatient.admissions({ status: 'admitted' }),
+        api.inpatient.wards(),
       ];
       if (isGeneralAdmin) calls.push(api.branches.list());
       const [bedsRes, admissionsRes, roomsRes, branchesRes] = await Promise.all(calls);
@@ -65,7 +58,7 @@ export default function Beds() {
     }
   }
 
-  useEffect(() => { load(); }, [viewBranch]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []);
 
   async function handleFreeChair(admissionId) {
     if (!window.confirm('Free this chair? The patient has moved on.')) return;
@@ -153,16 +146,9 @@ export default function Beds() {
 
   const availableBeds = beds.filter((b) => b.status === 'available');
 
-  // When a general admin views "all branches" combined, two branches could
-  // each have a ward with the same name (e.g. both have a "General Ward
-  // A") — group by branch+ward together in that case so they don't get
-  // merged into one block. Filtered to one branch, or for anyone
-  // branch-scoped, plain ward name is unambiguous.
-  const showAllBranches = isGeneralAdmin && !viewBranch;
   const wardGroups = beds.reduce((acc, bed) => {
-    const key = showAllBranches ? `${bed.branch_name} — ${bed.ward_name}` : bed.ward_name;
-    acc[key] = acc[key] || [];
-    acc[key].push(bed);
+    acc[bed.ward_name] = acc[bed.ward_name] || [];
+    acc[bed.ward_name].push(bed);
     return acc;
   }, {});
 
@@ -186,16 +172,6 @@ export default function Beds() {
           )}
         </div>
       </div>
-
-      {isGeneralAdmin && (
-        <div className="field" style={{ maxWidth: 220, marginBottom: 18 }}>
-          <label>Viewing branch</label>
-          <select value={viewBranch} onChange={(e) => setViewBranch(e.target.value)}>
-            <option value="">All branches</option>
-            {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </select>
-        </div>
-      )}
 
       <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginTop: -14, marginBottom: 20 }}>
         A chair is just a place a checked-in patient sits until it's their turn — seat them here while

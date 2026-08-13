@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
-import { useAuth } from '../AuthContext';
 import SearchPicker, { makeStaffFetcher } from '../components/SearchPicker';
 
 const CATEGORIES = [
@@ -22,13 +21,7 @@ function todayISO() {
 // security, utilities), deliberately separate from Billing, which is
 // patient revenue coming IN.
 export default function Expenses() {
-  const { user } = useAuth();
-  // A general admin has no branch_id and must say which branch an expense
-  // belongs to; a branch admin's expenses are always their own branch,
-  // forced server-side.
-  const isGeneralAdmin = user?.role === 'admin' && (user?.branch_id === null || user?.branch_id === undefined);
   const [expenses, setExpenses] = useState([]);
-  const [branches, setBranches] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -38,17 +31,13 @@ export default function Expenses() {
   const [amount, setAmount] = useState('');
   const [expenseDate, setExpenseDate] = useState(todayISO());
   const [staff, setStaff] = useState(null);
-  const [branchId, setBranchId] = useState('');
 
   async function load() {
     setLoading(true);
     setError('');
     try {
-      const calls = [api.expenses.list()];
-      if (isGeneralAdmin) calls.push(api.branches.list());
-      const [res, branchesRes] = await Promise.all(calls);
+      const res = await api.expenses.list();
       setExpenses(res.expenses);
-      if (branchesRes) setBranches(branchesRes.branches);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -65,10 +54,6 @@ export default function Expenses() {
       setError('Description and a positive amount are required.');
       return;
     }
-    if (isGeneralAdmin && !branchId) {
-      setError('Please select which branch this expense belongs to.');
-      return;
-    }
     try {
       await api.expenses.create({
         category,
@@ -76,12 +61,10 @@ export default function Expenses() {
         amount: Number(amount),
         staff_id: category === 'salary' && staff ? staff.id : undefined,
         expense_date: expenseDate,
-        branch_id: isGeneralAdmin ? branchId : undefined,
       });
       setDescription('');
       setAmount('');
       setStaff(null);
-      setBranchId('');
       setShowForm(false);
       load();
     } catch (err) {
@@ -135,15 +118,6 @@ export default function Expenses() {
                 <label>Date</label>
                 <input type="date" value={expenseDate} onChange={(e) => setExpenseDate(e.target.value)} />
               </div>
-              {isGeneralAdmin && (
-                <div className="field">
-                  <label>Branch *</label>
-                  <select value={branchId} onChange={(e) => setBranchId(e.target.value)}>
-                    <option value="">Select…</option>
-                    {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                  </select>
-                </div>
-              )}
             </div>
 
             {category === 'salary' && (
@@ -183,13 +157,12 @@ export default function Expenses() {
           ) : (
             <table>
               <thead>
-                <tr><th>Date</th>{isGeneralAdmin && <th>Branch</th>}<th>Category</th><th>Description</th><th>Staff</th><th>Amount</th><th></th></tr>
+                <tr><th>Date</th><th>Category</th><th>Description</th><th>Staff</th><th>Amount</th><th></th></tr>
               </thead>
               <tbody>
                 {expenses.map((e) => (
                   <tr key={e.id}>
                     <td>{new Date(e.expense_date).toLocaleDateString()}</td>
-                    {isGeneralAdmin && <td style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{e.branch_name}</td>}
                     <td style={{ textTransform: 'capitalize' }}>{e.category}</td>
                     <td>{e.description}</td>
                     <td>{e.staff_name || '—'}</td>

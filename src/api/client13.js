@@ -153,10 +153,7 @@ export const api = {
       const qs = new URLSearchParams(params).toString();
       return request(`/inpatient/beds${qs ? `?${qs}` : ''}`);
     },
-    wards: (params = {}) => {
-      const qs = new URLSearchParams(params).toString();
-      return request(`/inpatient/wards${qs ? `?${qs}` : ''}`);
-    },
+    wards: () => request('/inpatient/wards'),
     createWard: (payload) => request('/inpatient/wards', { method: 'POST', body: payload }),
     createBed: (payload) => request('/inpatient/beds', { method: 'POST', body: payload }),
     updateBedStatus: (id, status) => request(`/inpatient/beds/${id}/status`, { method: 'PATCH', body: { status } }),

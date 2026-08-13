@@ -23,7 +23,6 @@ import Prescriptions from './pages/Prescriptions';
 import Billing from './pages/Billing';
 import Reports from './pages/Reports';
 import Expenses from './pages/Expenses';
-import Branches from './pages/Branches';
 import Availability from './pages/Availability';
 import Schedule from './pages/Schedule';
 import PrintInvoice from './pages/PrintInvoice';
@@ -76,7 +75,7 @@ export default function App() {
             <Route
               path="beds"
               element={
-                <ProtectedRoute roles={['admin', 'nurse', 'receptionist']}>
+                <ProtectedRoute roles={['nurse', 'receptionist']}>
                   <Beds />
                 </ProtectedRoute>
               }
@@ -134,14 +133,6 @@ export default function App() {
               element={
                 <ProtectedRoute roles={['admin']}>
                   <Expenses />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="branches"
-              element={
-                <ProtectedRoute roles={['admin']}>
-                  <Branches />
                 </ProtectedRoute>
               }
             />

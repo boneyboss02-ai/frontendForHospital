@@ -153,10 +153,7 @@ export const api = {
       const qs = new URLSearchParams(params).toString();
       return request(`/inpatient/beds${qs ? `?${qs}` : ''}`);
     },
-    wards: (params = {}) => {
-      const qs = new URLSearchParams(params).toString();
-      return request(`/inpatient/wards${qs ? `?${qs}` : ''}`);
-    },
+    wards: () => request('/inpatient/wards'),
     createWard: (payload) => request('/inpatient/wards', { method: 'POST', body: payload }),
     createBed: (payload) => request('/inpatient/beds', { method: 'POST', body: payload }),
     updateBedStatus: (id, status) => request(`/inpatient/beds/${id}/status`, { method: 'PATCH', body: { status } }),
@@ -227,18 +224,6 @@ export const api = {
     list: (unreadOnly) => request(`/notifications${unreadOnly ? '?unread_only=true' : ''}`),
     markRead: (id) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
     markAllRead: () => request('/notifications/read-all', { method: 'PATCH' }),
-  },
-
-  branches: {
-    list: () => request('/branches'),
-    create: (payload) => request('/branches', { method: 'POST', body: payload }),
-    update: (id, payload) => request(`/branches/${id}`, { method: 'PATCH', body: payload }),
-  },
-
-  staffDirectory: {
-    list: () => request('/staff/directory'),
-    create: (payload) => request('/staff', { method: 'POST', body: payload }),
-    reassignBranch: (id, branch_id) => request(`/staff/${id}/branch`, { method: 'PATCH', body: { branch_id } }),
   },
 
   shifts: {

@@ -15,18 +15,9 @@ export default function Beds() {
   const { user } = useAuth();
   const canManageBeds = user?.role === 'admin' || user?.role === 'nurse' || user?.role === 'receptionist';
   const isAdmin = user?.role === 'admin';
-  // A general admin (no branch_id) has to say which branch a new room
-  // belongs to — a branch admin's rooms are always their own branch,
-  // forced server-side, so they never see this picker.
-  const isGeneralAdmin = isAdmin && (user?.branch_id === null || user?.branch_id === undefined);
   const [beds, setBeds] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [admissions, setAdmissions] = useState([]);
-  const [branches, setBranches] = useState([]);
-  // Which branch's rooms/beds general admin is currently viewing — '' means
-  // all branches combined. A branch admin never sees this, they only ever
-  // have their own branch's data regardless.
-  const [viewBranch, setViewBranch] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -37,27 +28,20 @@ export default function Beds() {
   const [showManageForm, setShowManageForm] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
   const [newRoomFloor, setNewRoomFloor] = useState('');
-  const [newRoomBranchId, setNewRoomBranchId] = useState('');
   const [newChairRoomId, setNewChairRoomId] = useState('');
   const [newChairNumber, setNewChairNumber] = useState('');
 
   async function load() {
     setLoading(true);
     try {
-      const bedParams = isGeneralAdmin && viewBranch ? { branch_id: viewBranch } : {};
-      const admissionParams = { status: 'admitted', ...(isGeneralAdmin && viewBranch ? { branch_id: viewBranch } : {}) };
-      const wardParams = isGeneralAdmin && viewBranch ? { branch_id: viewBranch } : {};
-      const calls = [
-        api.inpatient.beds(bedParams),
-        api.inpatient.admissions(admissionParams),
-        api.inpatient.wards(wardParams),
-      ];
-      if (isGeneralAdmin) calls.push(api.branches.list());
-      const [bedsRes, admissionsRes, roomsRes, branchesRes] = await Promise.all(calls);
+      const [bedsRes, admissionsRes, roomsRes] = await Promise.all([
+        api.inpatient.beds(),
+        api.inpatient.admissions({ status: 'admitted' }),
+        api.inpatient.wards(),
+      ]);
       setBeds(bedsRes.beds);
       setAdmissions(admissionsRes.admissions);
       setRooms(roomsRes.wards);
-      if (branchesRes) setBranches(branchesRes.branches);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -65,7 +49,7 @@ export default function Beds() {
     }
   }
 
-  useEffect(() => { load(); }, [viewBranch]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []);
 
   async function handleFreeChair(admissionId) {
     if (!window.confirm('Free this chair? The patient has moved on.')) return;
@@ -116,19 +100,10 @@ export default function Beds() {
       setError('Room name is required.');
       return;
     }
-    if (isGeneralAdmin && !newRoomBranchId) {
-      setError('Please select which branch this room belongs to.');
-      return;
-    }
     try {
-      await api.inpatient.createWard({
-        name: newRoomName.trim(),
-        floor: newRoomFloor || undefined,
-        branch_id: isGeneralAdmin ? newRoomBranchId : undefined,
-      });
+      await api.inpatient.createWard({ name: newRoomName.trim(), floor: newRoomFloor || undefined });
       setNewRoomName('');
       setNewRoomFloor('');
-      setNewRoomBranchId('');
       load();
     } catch (err) {
       setError(err.message);
@@ -153,16 +128,9 @@ export default function Beds() {
 
   const availableBeds = beds.filter((b) => b.status === 'available');
 
-  // When a general admin views "all branches" combined, two branches could
-  // each have a ward with the same name (e.g. both have a "General Ward
-  // A") — group by branch+ward together in that case so they don't get
-  // merged into one block. Filtered to one branch, or for anyone
-  // branch-scoped, plain ward name is unambiguous.
-  const showAllBranches = isGeneralAdmin && !viewBranch;
   const wardGroups = beds.reduce((acc, bed) => {
-    const key = showAllBranches ? `${bed.branch_name} — ${bed.ward_name}` : bed.ward_name;
-    acc[key] = acc[key] || [];
-    acc[key].push(bed);
+    acc[bed.ward_name] = acc[bed.ward_name] || [];
+    acc[bed.ward_name].push(bed);
     return acc;
   }, {});
 
@@ -187,16 +155,6 @@ export default function Beds() {
         </div>
       </div>
 
-      {isGeneralAdmin && (
-        <div className="field" style={{ maxWidth: 220, marginBottom: 18 }}>
-          <label>Viewing branch</label>
-          <select value={viewBranch} onChange={(e) => setViewBranch(e.target.value)}>
-            <option value="">All branches</option>
-            {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </select>
-        </div>
-      )}
-
       <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginTop: -14, marginBottom: 20 }}>
         A chair is just a place a checked-in patient sits until it's their turn — seat them here while
         they wait, then free the chair once they move on. No treatment details needed; that all lives
@@ -218,15 +176,6 @@ export default function Beds() {
                 <label>Floor (optional)</label>
                 <input placeholder="e.g. Ground Floor" value={newRoomFloor} onChange={(e) => setNewRoomFloor(e.target.value)} />
               </div>
-              {isGeneralAdmin && (
-                <div className="field">
-                  <label>Branch *</label>
-                  <select value={newRoomBranchId} onChange={(e) => setNewRoomBranchId(e.target.value)}>
-                    <option value="">Select…</option>
-                    {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                  </select>
-                </div>
-              )}
               <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }}>Add room</button>
             </form>
             <form onSubmit={handleCreateChair} style={{ flex: 1 }}>

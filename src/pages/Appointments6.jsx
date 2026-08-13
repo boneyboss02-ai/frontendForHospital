@@ -40,11 +40,6 @@ export default function Appointments() {
   const [filterDoctor, setFilterDoctor] = useState(null);
   const [filterPatient, setFilterPatient] = useState(null);
   const [filterStatus, setFilterStatus] = useState('');
-  // General admin only — anyone branch-scoped is always forced to their
-  // own branch server-side regardless of this.
-  const isGeneralAdmin = isAdmin && (user?.branch_id === null || user?.branch_id === undefined);
-  const [branches, setBranches] = useState([]);
-  const [filterBranch, setFilterBranch] = useState('');
 
   const [patient, setPatient] = useState(null);
   const [doctor, setDoctor] = useState(null);
@@ -93,7 +88,6 @@ export default function Appointments() {
       if (filterDoctor) params.doctor_id = filterDoctor.id;
       if (filterPatient) params.patient_id = filterPatient.id;
       if (filterStatus) params.status = filterStatus;
-      if (isGeneralAdmin && filterBranch) params.branch_id = filterBranch;
       const { appointments } = await api.appointments.list(params);
       setAppointments(appointments);
     } catch (err) {
@@ -103,11 +97,7 @@ export default function Appointments() {
     }
   }
 
-  useEffect(() => {
-    if (isGeneralAdmin) api.branches.list().then((d) => setBranches(d.branches)).catch(() => {});
-  }, [isGeneralAdmin]);
-
-  useEffect(() => { load(); }, [filterDate, filterDoctor, filterPatient, filterStatus, filterBranch]);
+  useEffect(() => { load(); }, [filterDate, filterDoctor, filterPatient, filterStatus]);
 
   async function handleBook(e) {
     e.preventDefault();
@@ -305,20 +295,11 @@ export default function Appointments() {
               <option value="no_show">No-show</option>
             </select>
           </div>
-          {isGeneralAdmin && (
-            <div className="field" style={{ maxWidth: 170 }}>
-              <label>Branch</label>
-              <select value={filterBranch} onChange={(e) => setFilterBranch(e.target.value)}>
-                <option value="">All branches</option>
-                {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-            </div>
-          )}
-          {(filterDate !== todayISO || filterDoctor || filterPatient || filterStatus || filterBranch) && (
+          {(filterDate !== todayISO || filterDoctor || filterPatient || filterStatus) && (
             <button
               type="button"
               className="btn btn-ghost btn-sm"
-              onClick={() => { setFilterDate(todayISO); setFilterDoctor(null); setFilterPatient(null); setFilterStatus(''); setFilterBranch(''); }}
+              onClick={() => { setFilterDate(todayISO); setFilterDoctor(null); setFilterPatient(null); setFilterStatus(''); }}
             >
               Reset filters
             </button>
@@ -365,7 +346,6 @@ export default function Appointments() {
                 <th>Time</th>
                 <th>Patient</th>
                 <th>Doctor</th>
-                {isGeneralAdmin && <th>Branch</th>}
                 <th>Status</th>
                 <th></th>
               </tr>
@@ -378,7 +358,6 @@ export default function Appointments() {
                     <td>{new Date(a.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                     <td>{a.patient_name} <span style={{ color: 'var(--muted)' }} className="mono">({a.patient_code})</span></td>
                     <td>{a.doctor_name}</td>
-                    {isGeneralAdmin && <td style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{a.branch_name}</td>}
                     <td><span className={`badge ${STATUS_BADGE[a.status]}`}>{a.status.replace('_', ' ')}</span></td>
                     <td style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                       {!isAdmin && (

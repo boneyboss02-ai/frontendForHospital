@@ -34,14 +34,7 @@ function BarRow({ label, value, max, formatValue }) {
 export default function Reports() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
-  // A general admin has no branch_id — they can view everything combined
-  // (default) or drill into one branch via this selector. Anyone
-  // branch-scoped never sees this; the backend already forces their own
-  // branch regardless.
-  const isGeneralAdmin = isAdmin && (user?.branch_id === null || user?.branch_id === undefined);
   const [searchParams] = useSearchParams();
-  const [branches, setBranches] = useState([]);
-  const [branchFilter, setBranchFilter] = useState('');
 
   const [from, setFrom] = useState(searchParams.get('from') || daysAgoISO(30));
   const [to, setTo] = useState(searchParams.get('to') || todayISO());
@@ -57,17 +50,11 @@ export default function Reports() {
   const [profitPatient, setProfitPatient] = useState(null);
   const [profitLoading, setProfitLoading] = useState(false);
 
-  useEffect(() => {
-    if (isGeneralAdmin) api.branches.list().then((d) => setBranches(d.branches)).catch(() => {});
-  }, [isGeneralAdmin]);
-
   async function load() {
     setLoading(true);
     setError('');
     try {
-      const params = { from, to };
-      if (isGeneralAdmin && branchFilter) params.branch_id = branchFilter;
-      const result = await api.reports.overview(params);
+      const result = await api.reports.overview({ from, to });
       setData(result);
     } catch (err) {
       setError(err.message);
@@ -83,7 +70,6 @@ export default function Reports() {
       const params = { from, to };
       if (profitDoctor) params.doctor_id = profitDoctor.id;
       if (profitPatient) params.patient_id = profitPatient.id;
-      if (isGeneralAdmin && branchFilter) params.branch_id = branchFilter;
       const result = await api.reports.profitability(params);
       setProfitData(result);
     } catch (err) {
@@ -95,7 +81,6 @@ export default function Reports() {
 
   useEffect(() => { load(); loadProfitability(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { loadProfitability(); }, [profitDoctor, profitPatient]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (isGeneralAdmin) { load(); loadProfitability(); } }, [branchFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div>
@@ -116,15 +101,6 @@ export default function Reports() {
             <label>To</label>
             <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
-          {isGeneralAdmin && (
-            <div className="field">
-              <label>Branch</label>
-              <select value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)}>
-                <option value="">All branches</option>
-                {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-            </div>
-          )}
           <button className="btn btn-primary" style={{ height: 38 }} onClick={() => { load(); loadProfitability(); }}>Apply</button>
         </div>
       </div>
@@ -173,29 +149,6 @@ export default function Reports() {
               </>
             )}
           </div>
-
-          {data.by_branch && (
-            <div className="card" style={{ marginBottom: 20 }}>
-              <h3 style={{ marginBottom: 4 }}>By branch</h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: 14 }}>
-                Click a branch to drill into just its numbers above.
-              </p>
-              <table>
-                <thead><tr><th>Branch</th><th>Revenue</th><th>Expenses</th><th>Supplies</th><th>Profit</th></tr></thead>
-                <tbody>
-                  {data.by_branch.map((b) => (
-                    <tr key={b.branch_id} style={{ cursor: 'pointer' }} onClick={() => setBranchFilter(String(b.branch_id))}>
-                      <td><strong>{b.branch_name}</strong></td>
-                      <td className="mono">{b.revenue.toFixed(2)}</td>
-                      <td className="mono">{b.expenses.toFixed(2)}</td>
-                      <td className="mono">{b.cost_of_supplies.toFixed(2)}</td>
-                      <td className="mono" style={{ color: b.profit >= 0 ? 'inherit' : 'var(--red)' }}>{b.profit.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
             <div className="card">

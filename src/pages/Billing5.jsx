@@ -16,15 +16,12 @@ export default function Billing() {
   // stays reception/admin. This is read-only access, not full access.
   const isDoctor = user?.role === 'doctor';
   const canManage = !isDoctor;
-  const isGeneralAdmin = user?.role === 'admin' && (user?.branch_id === null || user?.branch_id === undefined);
   const [searchParams, setSearchParams] = useSearchParams();
   const [invoices, setInvoices] = useState([]);
   const [statusFilter, setStatusFilter] = useState('');
   const [fromFilter, setFromFilter] = useState('');
   const [toFilter, setToFilter] = useState('');
   const [patientFilter, setPatientFilter] = useState(null);
-  const [branches, setBranches] = useState([]);
-  const [branchFilter, setBranchFilter] = useState('');
   const [overdueOnly, setOverdueOnly] = useState(searchParams.get('overdue') === 'true');
   const [selected, setSelected] = useState(null); // { invoice, items, payments }
   const [error, setError] = useState('');
@@ -109,7 +106,6 @@ export default function Billing() {
       if (toFilter) params.to = toFilter;
       if (patientFilter) params.patient_id = patientFilter.id;
       if (overdueOnly) params.overdue = 'true';
-      if (isGeneralAdmin && branchFilter) params.branch_id = branchFilter;
       const { invoices } = await api.billing.invoices(params);
       setInvoices(invoices);
     } catch (err) {
@@ -130,10 +126,7 @@ export default function Billing() {
     }
   }
 
-  useEffect(() => { load(); }, [statusFilter, fromFilter, toFilter, patientFilter, overdueOnly, branchFilter]);
-  useEffect(() => {
-    if (isGeneralAdmin) api.branches.list().then((d) => setBranches(d.branches)).catch(() => {});
-  }, [isGeneralAdmin]);
+  useEffect(() => { load(); }, [statusFilter, fromFilter, toFilter, patientFilter, overdueOnly]);
   useEffect(() => { loadOverdue(); }, []);
 
   function toggleOverdueOnly(next) {
@@ -359,20 +352,11 @@ export default function Billing() {
               <input type="checkbox" checked={overdueOnly} onChange={(e) => toggleOverdueOnly(e.target.checked)} />
               Overdue only
             </label>
-            {isGeneralAdmin && (
-              <div className="field" style={{ maxWidth: 160 }}>
-                <label>Branch</label>
-                <select value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)}>
-                  <option value="">All branches</option>
-                  {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </select>
-              </div>
-            )}
-            {(fromFilter || toFilter || patientFilter || statusFilter || overdueOnly || branchFilter) && (
+            {(fromFilter || toFilter || patientFilter || statusFilter || overdueOnly) && (
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"
-                onClick={() => { setFromFilter(''); setToFilter(''); setPatientFilter(null); setStatusFilter(''); toggleOverdueOnly(false); setBranchFilter(''); }}
+                onClick={() => { setFromFilter(''); setToFilter(''); setPatientFilter(null); setStatusFilter(''); toggleOverdueOnly(false); }}
               >
                 Reset filters
               </button>
@@ -386,13 +370,12 @@ export default function Billing() {
           ) : (
             <table>
               <thead>
-                <tr><th>Patient</th>{isGeneralAdmin && <th>Branch</th>}<th>Total</th><th>Paid</th><th>Status</th><th></th></tr>
+                <tr><th>Patient</th><th>Total</th><th>Paid</th><th>Status</th><th></th></tr>
               </thead>
               <tbody>
                 {invoices.map((inv) => (
                   <tr key={inv.id}>
                     <td>{inv.patient_name} <span className="mono" style={{ color: 'var(--muted)' }}>({inv.patient_code})</span></td>
-                    {isGeneralAdmin && <td style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{inv.branch_name}</td>}
                     <td className="mono">{Number(inv.total_amount).toFixed(2)}</td>
                     <td className="mono">{Number(inv.amount_paid).toFixed(2)}</td>
                     <td>
